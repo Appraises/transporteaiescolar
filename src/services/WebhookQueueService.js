@@ -5,6 +5,7 @@
  * Isso evita race conditions e garante que mensagens picadas enviadas rapidamente
  * sejam agrupadas antes de acionar a LLM e regras de negócio.
  */
+const LlmService = require('./LlmService');
 
 class WebhookQueueService {
   constructor() {
@@ -47,13 +48,26 @@ class WebhookQueueService {
 
     console.log(`[QueueService] Processando ${messagesToProcess.length} mensagens acumuladas para ${remoteJid}`);
 
-    // Aqui no futuro chamaremos o LlmService passando esse "bolo" de contexto
-    // e o roteador de intenções (baixa do motorista, cadastro, cancelamento do dia, etc)
     try {
-      // Dummy process logic for now
-      messagesToProcess.forEach(msg => {
-         console.log(`- Conteúdo a processar: ${JSON.stringify(msg.message || {})}`);
-      });
+      // Extraindo apenas os textos puros das mensagens (supondo estrutura básica textual por ora)
+      const textBuffer = messagesToProcess
+        .map(msg => msg.message?.conversation || msg.message?.extendedTextMessage?.text || '')
+        .filter(text => text.trim() !== '')
+        .join('. ');
+
+      if (textBuffer.length > 0) {
+        console.log(`[QueueService] Texto consolidado: "${textBuffer}"`);
+        // Aqui acionamos o Cérebro IA Ativamente:
+        const intention = await LlmService.parseIntentions(textBuffer);
+        
+        console.log(`[QueueService] 🧠 Intenção detectada para ${remoteJid}:`, intention);
+        
+        // Futuro: Routear "action" para os Controllers de BD e retornar via EvolutionAPI
+        if (intention.action === 'REGISTER_STUDENT') {
+           // ControllerFinanceiro.etc
+        }
+      }
+
     } catch (error) {
       console.error(`[QueueService] Erro ao processar mensagens para ${remoteJid}:`, error);
     }
