@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { sequelize } = require('./models');
 const routes = require('./routes');
+const CronService = require('./services/CronService');
 
 const app = express();
 
@@ -19,8 +20,11 @@ const init = async () => {
   try {
     // Sincroniza os modelos com o banco de dados. 
     // force: false não apaga os dados existentes.
-    await sequelize.sync({ force: false });
+    await sequelize.sync({ force: false, alter: true }); // garante o Config model
     console.log('[Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.');
+
+    // Liga os Agendamentos da Nossa Logística Automática
+    await CronService.startCronJobs();
 
     app.listen(PORT, () => {
         console.log(`[Servidor] Em execução na porta ${PORT}`);

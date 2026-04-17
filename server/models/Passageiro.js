@@ -54,6 +54,15 @@ const Passageiro = sequelize.define('Passageiro', {
   mensalidade: {
     type: DataTypes.FLOAT,
     allowNull: true,
+  },
+  onboarding_step: {
+    type: DataTypes.STRING, // e.g., 'AGUARDANDO_NOME', 'AGUARDANDO_TURNO', 'AGUARDANDO_ENDERECO', 'CONCLUIDO'
+    allowNull: true,
+    defaultValue: 'CONCLUIDO'
+  },
+  motorista_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true, // true until fully migrated
   }
 }, {
   tableName: 'passageiros',

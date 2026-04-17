@@ -32,6 +32,8 @@ class LlmService {
       - REGISTER_STUDENT: Quando o aluno/pai quer cadastrar endereço, turno e nome.
       - ABSENCE_NOTICE: Quando avisa que o aluno não vai para a van hoje.
       - DRIVER_CHECKPOINT: Quando o motorista (reconhecido via contexto) avisa que "pegou fulano" ou "já estou indo para a escola".
+      - FINANCE_APPROVE: Quando o MOTORISTA responde positivamente (ex: "ok", "sim", "pode baixar", "aprovado") confirmando a validade de um comprovante suspeito enviado pela IA.
+      - FINANCE_REJECT: Quando o MOTORISTA responde negativamente (ex: "não", "fake", "falso", "cancela") recusando um comprovante suspeito.
       - GENERAL_CHAT: Conversa normal ou dúvida não catalogada.
     `;
 

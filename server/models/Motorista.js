@@ -19,6 +19,18 @@ const Motorista = sequelize.define('Motorista', {
   status: {
     type: DataTypes.STRING,
     defaultValue: 'ativo',
+  },
+  meta_manha: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  meta_tarde: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  meta_noite: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
   }
 }, {
   tableName: 'motoristas',

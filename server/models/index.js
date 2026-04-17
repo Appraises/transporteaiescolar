@@ -4,12 +4,20 @@ const Passageiro = require('./Passageiro');
 const Viagem = require('./Viagem');
 const ViagemPassageiro = require('./ViagemPassageiro');
 const Financeiro = require('./Financeiro');
+const Config = require('./Config');
+const GrupoMotorista = require('./GrupoMotorista');
 
 // Relacionamentos
 
-// Motorista <-> Viagem
+// Motorista <-> Viagem, Motorista <-> GrupoMotorista, Motorista <-> Passageiro
 Motorista.hasMany(Viagem, { foreignKey: 'motorista_id' });
 Viagem.belongsTo(Motorista, { foreignKey: 'motorista_id' });
+
+Motorista.hasMany(GrupoMotorista, { foreignKey: 'motorista_id' });
+GrupoMotorista.belongsTo(Motorista, { foreignKey: 'motorista_id' });
+
+Motorista.hasMany(Passageiro, { foreignKey: 'motorista_id' });
+Passageiro.belongsTo(Motorista, { foreignKey: 'motorista_id' });
 
 // Viagem <-> Passageiro (N:M através de ViagemPassageiro)
 Viagem.belongsToMany(Passageiro, { through: ViagemPassageiro, foreignKey: 'viagem_id' });
@@ -31,5 +39,7 @@ module.exports = {
   Passageiro,
   Viagem,
   ViagemPassageiro,
-  Financeiro
+  Financeiro,
+  Config,
+  GrupoMotorista
 };
