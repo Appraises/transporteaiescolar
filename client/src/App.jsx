@@ -146,6 +146,13 @@ const ProtectedRoute = ({ isAuthenticated, children }) => {
     return children;
 };
 
+const AdminProtectedRoute = ({ children }) => {
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    const token = localStorage.getItem('adminToken');
+    if (!isAdmin || !token) return <Navigate to="/admin/login" replace />;
+    return children;
+};
+
 function App() {
     // Estado super simples substituindo AuthContext para nosso protótipo base
     const [isAuthenticated, setIsAuthenticated] = React.useState(false);
@@ -158,6 +165,14 @@ function App() {
                 <Route path="/landing" element={<LandingPage />} />
                 <Route path="/login" element={
                     isAuthenticated ? <Navigate to="/" /> : <LoginPage onLogin={() => setIsAuthenticated(true)} />
+                } />
+                
+                {/* Rotas Admin Master */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin" element={
+                    <AdminProtectedRoute>
+                        <AdminDashboard />
+                    </AdminProtectedRoute>
                 } />
                 
                 <Route path="/*" element={

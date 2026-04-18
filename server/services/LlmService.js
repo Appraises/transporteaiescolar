@@ -171,6 +171,52 @@ class LlmService {
       return { isSwitch: false };
     }
   }
+
+  /**
+   * Analisa pausas operacionais (Férias e Feriados prolongados)
+   */
+  async parseOperationPause(rawText, dataHojeStr) {
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('[LlmService] GEMINI_API_KEY ausente. Usando mock para parseOperationPause.');
+      return { isPauseCommand: false };
+    }
+
+    const prompt = `
+      Você é o assistente de uma van escolar. O motorista enviou a seguinte mensagem hoje (${dataHojeStr}):
+      "${rawText}"
+
+      Verifique se o motorista está comunicando a suspensão dos serviços (ex: informando que é feriado, ponto facultativo, semana do saco cheio ou que entrará de férias) OU se está comunicando o retorno aos trabalhos.
+      Feriados podem ser apenas 1 dia ou emendar vários dias.
+
+      Retorne EXATAMENTE APENAS um JSON válido (sem markdown), com esta estrutura:
+      {
+        "isPauseCommand": true ou false,
+        "type": "FERIADO" | "FERIAS_INICIO" | "FERIAS_FIM",
+        "startDate": "YYYY-MM-DD" ou null,
+        "endDate": "YYYY-MM-DD" ou null
+      }
+
+      Regras:
+      - Para FERIADO: se for só amanhã, startDate e endDate serão a data de amanhã.
+      - Para FERIAS_INICIO: startDate é quando começa, endDate pode ser null se ele não avisou quando volta.
+      - Para FERIAS_FIM (retorno): retornará isPauseCommand true com type FERIAS_FIM.
+      Se NÃO for um comando de recesso/férias, retorne {"isPauseCommand": false}.
+    `;
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      const textOutput = response.text;
+      const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanJsonStr);
+    } catch (error) {
+      console.error('[LlmService] Falha ao extrair pausa operacional:', error);
+      return { isPauseCommand: false };
+    }
+  }
 }
 
 module.exports = new LlmService();

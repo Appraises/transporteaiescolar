@@ -39,9 +39,38 @@ class WebhookController {
 
       console.log(`[Webhook] Mensagem recebida de ${remoteJid}`);
       
-      // 1. Tratativa de Arquivos e Fotos (Para Comprovantes)
+      // 1. Tratativa de Arquivos e Fotos (Para Comprovantes) e Áudios (Para Whisper STT)
       const msgType = data.message ? Object.keys(data.message)[0] : null;
-      if (msgType === 'imageMessage' || msgType === 'documentMessage') {
+      
+      // Tratamento Específico para Voice Notes (Áudios do Motorista)
+      if (msgType === 'audioMessage') {
+          const hasBase64 = data.base64;
+          if (hasBase64) {
+              console.log(`[Audio] Áudio recebido de ${remoteJid}, iniciando conversão FFMPEG e Whisper STT Local...`);
+              try {
+                  const AudioTranscriptionService = require('../services/AudioTranscriptionService');
+                  const textoTranscrito = await AudioTranscriptionService.transcribeAudioBase64(hasBase64);
+                  
+                  if (!textoTranscrito || textoTranscrito.trim() === '') {
+                      console.log(`[Audio] Áudio ininteligível ou vazio ignorado.`);
+                      return;
+                  }
+                  
+                  console.log(`[Audio] STT finalizou. Texto transcrito: "${textoTranscrito}"`);
+                  
+                  // FINGE ser uma mensagem de texto para o funil fluir nas IA's normais lá para baixo
+                  textMessage = textoTranscrito;
+              } catch (e) {
+                  console.error('[Audio] Erro na transcrição STT:', e);
+                  return; // Impede que o fluxo vá pra frente com a variável textMessage vazia
+              }
+          } else {
+             // Evolution não mandou base64 na config do webhook
+             return;
+          }
+      } 
+      // Tratamento Antigo de Mídias/Imagens para Recibos
+      else if (msgType === 'imageMessage' || msgType === 'documentMessage') {
           const mType = data.message[msgType];
           const hasBase64 = data.base64; // Evolution injeta na raiz `data.base64` se setado no webhook true
           
@@ -120,8 +149,34 @@ class WebhookController {
                  }
              }
 
-             // B. Lançamento de Gastos / Despesas (via LLM)
+             // B. Pausas Operacionais (Férias e Feriados via LLM)
              const LlmService = require('../services/LlmService');
+             const hojeFormatado = new Date().toISOString().split('T')[0];
+             const pauseDetectado = await LlmService.parseOperationPause(textMessage, hojeFormatado);
+             
+             if (pauseDetectado && pauseDetectado.isPauseCommand) {
+                 if (pauseDetectado.type === 'FERIADO') {
+                     m.pausa_inicio = pauseDetectado.startDate;
+                     m.pausa_fim = pauseDetectado.endDate;
+                     await m.save();
+                     await EvolutionService.sendMessage(remoteJid, MessageVariation.pausas.confirmacao('Feriado ou Recesso', pauseDetectado.endDate));
+                 } else if (pauseDetectado.type === 'FERIAS_INICIO') {
+                     m.em_ferias = true;
+                     m.pausa_inicio = pauseDetectado.startDate;
+                     m.pausa_fim = pauseDetectado.endDate;
+                     await m.save();
+                     await EvolutionService.sendMessage(remoteJid, MessageVariation.pausas.confirmacao('Férias Prolongadas', pauseDetectado.endDate));
+                 } else if (pauseDetectado.type === 'FERIAS_FIM') {
+                     m.em_ferias = false;
+                     m.pausa_inicio = null;
+                     m.pausa_fim = null;
+                     await m.save();
+                     await EvolutionService.sendMessage(remoteJid, MessageVariation.pausas.retorno());
+                 }
+                 return; // Bloqueia propagação
+             }
+
+             // C. Lançamento de Gastos / Despesas (via LLM)
              const Despesa = require('../models/Despesa');
              const { Op } = require('sequelize');
 

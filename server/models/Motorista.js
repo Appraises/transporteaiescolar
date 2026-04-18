@@ -39,6 +39,18 @@ const Motorista = sequelize.define('Motorista', {
   meta_noite: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
+  },
+  em_ferias: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  pausa_inicio: {
+    type: DataTypes.DATEONLY, // Formato YYYY-MM-DD
+    allowNull: true,
+  },
+  pausa_fim: {
+    type: DataTypes.DATEONLY, // Formato YYYY-MM-DD
+    allowNull: true,
   }
 }, {
   tableName: 'motoristas',

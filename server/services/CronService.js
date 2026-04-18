@@ -26,6 +26,57 @@ class CronService {
     
     // Liga o Lembrete de Endereço Alternativo
     this.agendarLembreteEnderecos();
+    
+    // Liga o Checador Pró-Ativo de Feriados Nacionais
+    this.agendarAlertaFeriado();
+  }
+
+  agendarAlertaFeriado() {
+    if(activeJobs['alerta_feriado']) activeJobs['alerta_feriado'].stop();
+    
+    // Roda todo dia as 18:00 verificando o dia de amanhã
+    activeJobs['alerta_feriado'] = cron.schedule('0 18 * * *', async () => {
+       console.log('[Cron] Verificando feriados do dia seguinte...');
+       try {
+           const Holidays = require('date-holidays');
+           const hd = new Holidays('BR');
+           
+           const dataAmanha = new Date();
+           dataAmanha.setDate(dataAmanha.getDate() + 1);
+           const amanhaStr = dataAmanha.toISOString().split('T')[0];
+           
+           // isHoliday retorna array com os feriados do dia, ou false
+           const feriadosHoje = hd.isHoliday(dataAmanha);
+           
+           if (!feriadosHoje) return;
+
+           const nomeFeriado = feriadosHoje[0].name;
+           
+           const { Motorista } = require('../models');
+           const MessageVariation = require('../utils/MessageVariation');
+           const motoristasAtivos = await Motorista.findAll({ where: { status: 'ativo' } });
+
+           for (const m of motoristasAtivos) {
+               // Verifica se o motorista já tá de férias ou se já pausou amanhã
+               if (m.em_ferias) continue;
+               
+               let jaPausouAmanha = false;
+               if (m.pausa_inicio && m.pausa_fim) {
+                   if (amanhaStr >= m.pausa_inicio && amanhaStr <= m.pausa_fim) {
+                       jaPausouAmanha = true;
+                   }
+               }
+
+               if (!jaPausouAmanha) {
+                   const msgH = MessageVariation.pausas.feriadoProativo(nomeFeriado, amanhaStr.split('-').reverse().join('/'));
+                   await EvolutionService.sendMessage(m.telefone, msgH);
+                   // O motorista pode responder com o flow nativo (NLP pegará "amanhã é feriado")
+               }
+           }
+       } catch (e) {
+           console.error('[Cron] Falha ao rodar checagem proativa de feriados', e);
+       }
+    });
   }
 
   agendarLembreteEnderecos() {
@@ -187,10 +238,40 @@ class CronService {
     const [hhE, mmE] = horaEnquete.split(':');
     const cronEnquete = `${mmE} ${hhE} * * 1-5`; // Seg a Sexta
     
-    activeJobs[`${turnoNome}_enquete`] = cron.schedule(cronEnquete, () => {
+    activeJobs[`${turnoNome}_enquete`] = cron.schedule(cronEnquete, async () => {
       console.log(`[Cron] Acionando Enquete de ${turnoNome}`);
-      PollService.dispararEnquete(turnoNome);
-      // Aqui idealmente também criariamos a row "Viagem" no banco com status 'aberta'
+      
+      const { Motorista, GrupoMotorista } = require('../models');
+      const hoje = new Date();
+      const hojeStr = hoje.toISOString().split('T')[0];
+
+      // Busca motoristas ativos que possuem grupos cadastrados
+      const grupos = await GrupoMotorista.findAll({
+         include: [{
+            model: Motorista,
+            where: { status: 'ativo' }
+         }]
+      });
+
+      for (const grupo of grupos) {
+         const m = grupo.Motorista;
+         
+         // Regra 1: Férias indefinidas
+         if (m.em_ferias) {
+             console.log(`[Cron] Motorista ${m.nome} em férias. Enquete pulada.`);
+             continue;
+         }
+         
+         // Regra 2: Pausas temporárias (feriados / recesso)
+         if (m.pausa_inicio && m.pausa_fim) {
+             if (hojeStr >= m.pausa_inicio && hojeStr <= m.pausa_fim) {
+                 console.log(`[Cron] Motorista ${m.nome} em recesso (Feriado). Enquete pulada.`);
+                 continue;
+             }
+         }
+
+         await PollService.dispararEnquete(turnoNome, grupo.group_jid);
+      }
     });
 
     // 2. Agendamento do Fechamento e Envio Pro Motorista

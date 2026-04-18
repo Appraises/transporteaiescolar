@@ -7,6 +7,7 @@ const Financeiro = require('./Financeiro');
 const Config = require('./Config');
 const GrupoMotorista = require('./GrupoMotorista');
 const Despesa = require('./Despesa');
+const Assinatura = require('./Assinatura');
 
 // Relacionamentos
 
@@ -22,6 +23,10 @@ Passageiro.belongsTo(Motorista, { foreignKey: 'motorista_id' });
 
 Motorista.hasMany(Despesa, { foreignKey: 'motorista_id' });
 Despesa.belongsTo(Motorista, { foreignKey: 'motorista_id' });
+
+// Motorista <-> Assinatura (Planos SaaS)
+Motorista.hasMany(Assinatura, { foreignKey: 'motorista_id' });
+Assinatura.belongsTo(Motorista, { foreignKey: 'motorista_id' });
 
 // Viagem <-> Passageiro (N:M através de ViagemPassageiro)
 Viagem.belongsToMany(Passageiro, { through: ViagemPassageiro, foreignKey: 'viagem_id' });
@@ -54,5 +59,6 @@ module.exports = {
   Config,
   GrupoMotorista,
   Despesa,
-  Endereco
+  Endereco,
+  Assinatura
 };

@@ -77,6 +77,22 @@ const addressReminders = [
     }
 ];
 
+// ─── Férias e Feriados (Pausas) ────────────────────────
+
+const pauseConfirmations = [
+    (tipo, dataFim) => `✅ Entendido! Suspenderei todas as enquetes e chamadas de rota. Motivo: *${tipo}*${dataFim ? ` até *${dataFim}*.` : '.'} Bom descanso! 🏖️`,
+    (tipo, dataFim) => `Tudo certo, chefe! O sistema ficará em silêncio por conta de *${tipo}*${dataFim ? ` até o dia *${dataFim}*.` : '.'} Até a volta! 🚐💤`,
+];
+
+const pauseResumptions = [
+    () => `🎒 Bem-vindo de volta! As enquetes diárias e o cálculo de rotas acabam de voltar à programação normal. Bora rodar! 🚐💨`,
+    () => `Beleza! O recesso acabou. As chamadas automáticas dos alunos estão reativadas a partir de agora. Vamo que vamo! 🛣️`
+];
+
+const proactiveHolidays = [
+    (feriadoNome, data) => `Fala, chefe! Meu calendário acusou aqui que dia *${data}* é o feriado nacional de *${feriadoNome}*.\n\nVocê vai rodar a van nesse dia ou posso pausar as enquetes dessa data? (Responda "vou rodar" ou "é feriado") 📅`,
+    (feriadoNome, data) => `Opa! Dia *${data}* tá marcado como feriado de *${feriadoNome}*.\n\nQuer que eu suspenda a chamada para os alunos nesse dia? Me confirma por favor! (Mande "sim, pausa" ou "não, roda normal") 🚨`
+];
 
 module.exports = {
     pick,
@@ -96,5 +112,10 @@ module.exports = {
         confirmacao: (qtd) => pick(addressConfirmations)(qtd),
         troca: (trecho, apelido) => pick(addressSwitches)(trecho, apelido),
         lembreteAlternativo: (nome, primario, apelidoIda, apelidoVolta) => pick(addressReminders)(nome, primario, apelidoIda, apelidoVolta)
+    },
+    pausas: {
+        confirmacao: (tipo, dataFim) => pick(pauseConfirmations)(tipo, dataFim),
+        retorno: () => pick(pauseResumptions)(),
+        feriadoProativo: (nome, data) => pick(proactiveHolidays)(nome, data)
     }
 };

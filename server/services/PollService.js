@@ -5,12 +5,13 @@ class PollService {
   /**
    * Envia a enquete para o Grupo do WhatsApp
    * @param {string} turno Manhã, Tarde ou Noite
+   * @param {string} targetJid ID do grupo alvo
    */
-  async dispararEnquete(turno) {
-    const groupId = process.env.WHATSAPP_GROUP_ID; // Ex: 120363@g.us
+  async dispararEnquete(turno, targetJid = null) {
+    const groupId = targetJid || process.env.WHATSAPP_GROUP_ID; // Fallback para mock
     
     if (!groupId || !process.env.EVOLUTION_API_URL || !process.env.EVOLUTION_API_TOKEN) {
-      console.log(`[Poll Mock] Disparando enquete mockada pro Turno: ${turno}`);
+      console.log(`[Poll] Disparando enquete mockada pro Turno: ${turno}`);
       return true;
     }
 
