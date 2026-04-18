@@ -26,6 +26,7 @@ class WebhookController {
 
     if (event === 'messages.upsert') {
       const data = body.data;
+      console.log("[DEBUG] Webhook data recebido:", JSON.stringify(data).substring(0, 200));
       if (!data) return;
 
       const remoteJid = data.key?.remoteJid;
@@ -76,27 +77,72 @@ class WebhookController {
           }
       }
 
-      // 1.5. Configuração de Lotação via Zap (Apenas Motoristas Pagantes)
+      // 1.5. Interceptação de Comandos do Motorista via Zap Privado
       if (!isGroup) {
           const m = await Motorista.findOne({ where: { telefone: remoteJid }});
-          if (m && textMessage.toLowerCase().startsWith('lotacao ')) {
-               const parts = textMessage.toLowerCase().split(' ');
-               if(parts.length === 3) {
-                   const turno = parts[1].replace('ã', 'a'); // manha, tarde, noite
-                   const valor = parseInt(parts[2]);
-                   let alterado = false;
-                   if(turno === 'manha') { m.meta_manha = valor; alterado=true; }
-                   if(turno === 'tarde') { m.meta_tarde = valor; alterado=true; }
-                   if(turno === 'noite') { m.meta_noite = valor; alterado=true; }
-                   
-                   if (alterado) {
-                      await m.save();
-                      EvolutionService.sendMessage(remoteJid, `✅ Capacidade do turno ${turno.toUpperCase()} definida para ${valor} alunos! Vou te avisar conforme eles forem entrando no sistema.`);
-                   } else {
-                      EvolutionService.sendMessage(remoteJid, `⚠️ Turno inválido. Escreva: lotacao manha 15, lotacao tarde 10...`);
+          if (m) {
+             // A. Lotação
+             if (textMessage.toLowerCase().startsWith('lotacao ')) {
+                 const parts = textMessage.toLowerCase().split(' ');
+                 if(parts.length === 3) {
+                     const turno = parts[1].replace('ã', 'a'); // manha, tarde, noite
+                     const valor = parseInt(parts[2]);
+                     let alterado = false;
+                     if(turno === 'manha') { m.meta_manha = valor; alterado=true; }
+                     if(turno === 'tarde') { m.meta_tarde = valor; alterado=true; }
+                     if(turno === 'noite') { m.meta_noite = valor; alterado=true; }
+                     
+                     if (alterado) {
+                        await m.save();
+                        EvolutionService.sendMessage(remoteJid, `✅ Capacidade do turno ${turno.toUpperCase()} definida para ${valor} alunos! Vou te avisar conforme eles forem entrando no sistema.`);
+                     } else {
+                        EvolutionService.sendMessage(remoteJid, `⚠️ Turno inválido. Escreva: lotacao manha 15, lotacao tarde 10...`);
+                     }
+                     return;
+                 }
+             }
+
+             // B. Lançamento de Gastos / Despesas (via LLM)
+             const LlmService = require('../services/LlmService');
+             const Despesa = require('../models/Despesa');
+             const { Op } = require('sequelize');
+
+             const despesaDetectada = await LlmService.parseExpense(textMessage);
+             if (despesaDetectada && despesaDetectada.isExpense) {
+                console.log(`[Financeiro] Gasto detectado de motorista ${m.id}:`, despesaDetectada);
+                
+                // Salva a despesa
+                await Despesa.create({
+                   motorista_id: m.id,
+                   categoria: despesaDetectada.categoria || 'outros',
+                   valor: despesaDetectada.valor,
+                   descricao: despesaDetectada.descricao || textMessage
+                });
+
+                // Calcula o total gasto do mês para retornar no feedback
+                const inicioMes = new Date();
+                inicioMes.setDate(1);
+                inicioMes.setHours(0,0,0,0);
+                const fimMes = new Date();
+                fimMes.setMonth(fimMes.getMonth() + 1);
+                fimMes.setDate(0);
+                fimMes.setHours(23,59,59,999);
+
+                const gastosMes = await Despesa.findAll({
+                   where: {
+                      motorista_id: m.id,
+                      data: {
+                         [Op.between]: [inicioMes, fimMes]
+                      }
                    }
-                   return;
-               }
+                });
+                
+                const totalMes = gastosMes.reduce((acc, curr) => acc + curr.valor, 0);
+
+                const msgConfirmacao = MessageVariation.despesas.confirmacao(despesaDetectada.categoria, despesaDetectada.valor, totalMes);
+                await EvolutionService.sendMessage(remoteJid, msgConfirmacao);
+                return; // Bloqueia de ir pra fila genérica do bot
+             }
           }
       }
 
@@ -144,14 +190,47 @@ class WebhookController {
               passageiro.turno = textMessage;
               passageiro.onboarding_step = 'AGUARDANDO_ENDERECO';
               await passageiro.save();
-              EvolutionService.sendMessage(remoteJid, `Ok, Turno ${textMessage}.\n\n*3. Último passo: Qual o endereço completo para a rota?*\n(Ex: Rua das Flores, 123, Bairro Centro, CEP...)`);
+              EvolutionService.sendMessage(remoteJid, `Ok, Turno ${textMessage}.\n\n*3. Agora preciso dos endereços de embarque.*\n\nSe o aluno embarca sempre no mesmo lugar, mande *um* endereço.\nSe ele tem mais de um local (ex: casa da mãe e casa do pai), mande *um por linha*, começando com um apelido:\n\nExemplo:\nCasa da Mãe - Rua das Flores, 123, Centro\nCasa do Pai - Av. Brasil, 456, Jardim América\n\n📝 Mande todos agora numa mensagem só:`);
               return;
           }
           if (passo === 'AGUARDANDO_ENDERECO') {
-              passageiro.logradouro = textMessage; // Safely putting all string in logradouro for human review or Geocoding later
+              const Endereco = require('../models/Endereco');
+              const linhas = textMessage.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+              
+              let countCadastrados = 0;
+              let primeiroEnderecoId = null;
+
+              for (let i = 0; i < linhas.length; i++) {
+                 const linha = linhas[i];
+                 let apelido = `Endereço ${i + 1}`;
+                 let enderecoCompleto = linha;
+
+                 // Tenta separar por '-' ou ':'
+                 const match = linha.match(/^([^-:]+)[-:]\s*(.*)$/);
+                 if (match) {
+                    apelido = match[1].trim();
+                    enderecoCompleto = match[2].trim();
+                 }
+
+                 const novoEndereco = await Endereco.create({
+                    passageiro_id: passageiro.id,
+                    apelido: apelido,
+                    endereco_completo: enderecoCompleto
+                 });
+
+                 if (i === 0) {
+                    primeiroEnderecoId = novoEndereco.id;
+                 }
+                 countCadastrados++;
+              }
+
+              passageiro.endereco_ida_id = primeiroEnderecoId;
+              passageiro.endereco_volta_id = primeiroEnderecoId;
               passageiro.onboarding_step = 'CONCLUIDO';
               await passageiro.save();
-              EvolutionService.sendMessage(remoteJid, `✅ *Tudo pronto!* O motorista já recebeu seus dados para adicionar na rota otimizada e o faturamento.\nMuito obrigado!`);
+              
+              const msgConfirm = MessageVariation.enderecos.confirmacao(countCadastrados);
+              EvolutionService.sendMessage(remoteJid, msgConfirm);
               
               // Notificacao de Meta para o Motorista Responsável
               const motorista_resp = await Motorista.findByPk(passageiro.motorista_id);
@@ -175,6 +254,36 @@ class WebhookController {
               }
 
               return;
+          }
+      } else if (passageiro && passageiro.onboarding_step === 'CONCLUIDO') {
+          // 4. Interceptação de Troca de Endereço Ativo
+          const Endereco = require('../models/Endereco');
+          const LlmService = require('../services/LlmService');
+          
+          const enderecosDisponiveis = await Endereco.findAll({ where: { passageiro_id: passageiro.id } });
+          
+          if (enderecosDisponiveis.length > 0) {
+              const switchDetectado = await LlmService.parseAddressSwitch(textMessage, enderecosDisponiveis);
+              
+              if (switchDetectado && switchDetectado.isSwitch) {
+                  const enderecoEscolhido = enderecosDisponiveis.find(e => e.apelido === switchDetectado.apelido);
+                  
+                  if (enderecoEscolhido) {
+                      let trechoTxt = 'ida e volta';
+                      if (switchDetectado.trecho === 'ida' || switchDetectado.trecho === 'ambos') {
+                          passageiro.endereco_ida_id = enderecoEscolhido.id;
+                          if (switchDetectado.trecho === 'ida') trechoTxt = 'ida';
+                      }
+                      if (switchDetectado.trecho === 'volta' || switchDetectado.trecho === 'ambos') {
+                          passageiro.endereco_volta_id = enderecoEscolhido.id;
+                          if (switchDetectado.trecho === 'volta') trechoTxt = 'volta';
+                      }
+                      
+                      await passageiro.save();
+                      EvolutionService.sendMessage(remoteJid, MessageVariation.enderecos.troca(trechoTxt, enderecoEscolhido.apelido));
+                      return; // Impede que vá pra fila genérica
+                  }
+              }
           }
       }
 

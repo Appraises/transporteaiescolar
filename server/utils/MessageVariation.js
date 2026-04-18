@@ -39,6 +39,45 @@ const pollAnnouncements = [
     (turno) => `⏰ *Enquete do Motorista (${turno}) *- Só marca se for:`
 ];
 
+// ─── Lançamento de Custos e Relatórios ────────────────────────
+
+const expenseConfirmations = [
+    (categoria, valor, totalMes) => `✅ Anotado, chefe! Registrei *R$ ${valor.toFixed(2)}* em ${categoria}.\nAté agora, as despesas desse mês estão em *R$ ${totalMes.toFixed(2)}*. 🚐`,
+    (categoria, valor, totalMes) => `📝 Custo salvo no sistema! Mais *R$ ${valor.toFixed(2)}* pra conta de ${categoria}.\nSeu custo total do mês foi pra *R$ ${totalMes.toFixed(2)}*. 🔧`,
+    (categoria, valor, totalMes) => `Ok! Gasto de *R$ ${valor.toFixed(2)}* com ${categoria} cadastrado.\nTotal de saídas no mês: *R$ ${totalMes.toFixed(2)}*. 💸`
+];
+
+const profitReports = [
+    (nome, mes, receita, despesas, lucro) => `Olá, *${nome}*! 📊\n\nAqui é o seu robô financeiro com o fechamento do mês de *${mes}*:\n\n💰 *Receita (mensalidades pagas):* R$ ${receita.toFixed(2)}\n📉 *Despesas e Custos:* R$ ${despesas.toFixed(2)}\n─────────────────\n✅ *Lucro líquido:* R$ ${lucro.toFixed(2)}\n\nBora pra mais um mês de sucesso! 🚐💨`,
+    (nome, mes, receita, despesas, lucro) => `Fala, *${nome}*! Tudo pronto para o balanço de *${mes}*? 📉📈\n\nNeste mês você arrecadou *R$ ${receita.toFixed(2)}* dos alunos, e gastou *R$ ${despesas.toFixed(2)}* com a van.\nSeu lucro final ficou em *R$ ${lucro.toFixed(2)}*!\n\nSe precisar ver os detalhes, acesse o painel. Um abraço! 💼`
+];
+
+// ─── Endereços e Onboarding ────────────────────────
+
+const addressConfirmations = [
+    (qtd) => `✅ *Tudo pronto!* Cadastrei ${qtd} endereço(s) no sistema.\n\nPara trocar o endereço do dia, é só me mandar uma mensagem como:\n_"trocar endereço ida para Casa do Pai"_`
+];
+
+const addressSwitches = [
+    (trecho, apelido) => `✅ Endereço da *${trecho}* trocado para *${apelido}*!\n\n⚠️ _Esse endereço ficará ativo até que você peça pra trocar de novo._`,
+    (trecho, apelido) => `Feito! Anotei aqui que a *${trecho}* agora vai ser em: *${apelido}*. 🚐\n\n_Lembre-se: ele continuará ativo até você mudar novamente!_`
+];
+
+const addressReminders = [
+    (nome, primario, apelidoIda, apelidoVolta) => {
+        let detalhe = '';
+        if (apelidoIda && apelidoVolta) {
+            detalhe = `a *ida* está em *${apelidoIda}* e a *volta* em *${apelidoVolta}*`;
+        } else if (apelidoIda) {
+            detalhe = `a *ida* está em *${apelidoIda}* (volta no endereço padrão)`;
+        } else {
+            detalhe = `a *volta* está em *${apelidoVolta}* (ida no endereço padrão)`;
+        }
+        return `🔔 Bom dia, *${nome}*!\n\nSó passando pra lembrar: seu endereço ativo *não* é o principal (*${primario}*).\nAtualmente, ${detalhe}.\n\nSe quiser voltar pro padrão, me mande:\n_"trocar endereço para ${primario}"_`;
+    }
+];
+
+
 module.exports = {
     pick,
     financeiro: {
@@ -48,5 +87,14 @@ module.exports = {
     },
     logistica: {
         pollHeader: (turno) => pick(pollAnnouncements)(turno)
+    },
+    despesas: {
+        confirmacao: (categoria, valor, totalMes) => pick(expenseConfirmations)(categoria, valor, totalMes),
+        relatorio: (nome, mes, receita, despesas, lucro) => pick(profitReports)(nome, mes, receita, despesas, lucro)
+    },
+    enderecos: {
+        confirmacao: (qtd) => pick(addressConfirmations)(qtd),
+        troca: (trecho, apelido) => pick(addressSwitches)(trecho, apelido),
+        lembreteAlternativo: (nome, primario, apelidoIda, apelidoVolta) => pick(addressReminders)(nome, primario, apelidoIda, apelidoVolta)
     }
 };

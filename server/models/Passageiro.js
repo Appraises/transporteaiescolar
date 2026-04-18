@@ -63,6 +63,14 @@ const Passageiro = sequelize.define('Passageiro', {
   motorista_id: {
     type: DataTypes.INTEGER,
     allowNull: true, // true until fully migrated
+  },
+  endereco_ida_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  endereco_volta_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
   }
 }, {
   tableName: 'passageiros',
