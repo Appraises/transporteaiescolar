@@ -20,6 +20,14 @@ const Motorista = sequelize.define('Motorista', {
     type: DataTypes.STRING,
     defaultValue: 'ativo',
   },
+  latitude: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  longitude: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
   meta_manha: {
     type: DataTypes.INTEGER,
     defaultValue: 0,

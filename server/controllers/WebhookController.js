@@ -77,10 +77,28 @@ class WebhookController {
           }
       }
 
-      // 1.5. Interceptação de Comandos do Motorista via Zap Privado
       if (!isGroup) {
-          const m = await Motorista.findOne({ where: { telefone: remoteJid }});
+          const m = await Motorista.findOne({ where: { telefone: remoteJid, status: 'ativo' }});
           if (m) {
+             // A0. Comando Garagem (Base da Rota)
+             if (textMessage.toLowerCase().startsWith('garagem ')) {
+                 const GeocodeService = require('../services/GeocodeService');
+                 const enderecoBase = textMessage.substring(8).trim();
+                 
+                 EvolutionService.sendMessage(remoteJid, `📍 Processando coordenadas da garagem...`);
+                 
+                 const coords = await GeocodeService.getCoordinates(enderecoBase);
+                 if (coords) {
+                     m.latitude = coords.lat;
+                     m.longitude = coords.lng;
+                     await m.save();
+                     EvolutionService.sendMessage(remoteJid, `✅ Garagem registrada nas coordenadas detectadas!\nA partir de agora usarei essa base para montar suas rotas.`);
+                 } else {
+                     EvolutionService.sendMessage(remoteJid, `⚠️ Não consegui achar o endereço no mapa. Mande algo mais completo. Exemplo:\ngaragem Rua XYZ, 110, Bairro - Cidade`);
+                 }
+                 return;
+             }
+
              // A. Lotação
              if (textMessage.toLowerCase().startsWith('lotacao ')) {
                  const parts = textMessage.toLowerCase().split(' ');
@@ -146,14 +164,14 @@ class WebhookController {
           }
       }
 
-      // 2. Comandos de Grupo (Mapeamento Multi-Tenant)
+      // 2. Comandos de Grupo (Mapeamento Multi-Tenant original de '/cadastro' pode ser ignorado ou removido, mantido como fallback por enquanto)
       if (isGroup) {
          if (textMessage.toLowerCase().trim() === '/cadastro') {
             const grupo = await GrupoMotorista.findOne({ where: { group_jid: remoteJid } });
             if (grupo) {
                console.log(`[Onboarding] Iniciando cadastro de ${participant} no grupo ${grupo.id}`);
                const [pass, created] = await Passageiro.findOrCreate({ 
-                  where: { telefoneResponsavel: participant },
+                  where: { telefone_responsavel: participant },
                   defaults: {
                      nome: 'Aguardando',
                      telefone_responsavel: participant,
@@ -164,9 +182,9 @@ class WebhookController {
                });
                
                if (created || pass.onboarding_step !== 'CONCLUIDO') {
-                  EvolutionService.sendMessage(participant, "👋 Olá! Vi sua requisição no grupo da Van!\nVamos configurar sua vaga Rapidinho.\n\n*1. Qual o nome completo do aluno que irá na Van?*");
+                  EvolutionService.sendMessage(participant, "👋 Olá! Vi sua requisição!\n*1. Qual o nome completo do aluno que irá na Van?*");
                } else {
-                  EvolutionService.sendMessage(participant, "Você já está com o cadastro concluído no sistema da van! Se precisar de algo, chame o motorista.");
+                  EvolutionService.sendMessage(participant, "Você já está com o cadastro concluído no sistema da van!");
                }
             }
          }
@@ -174,7 +192,30 @@ class WebhookController {
       }
 
       // 3. Fila Privada (Chatbot de Onboarding)
-      const passageiro = await Passageiro.findOne({ where: { telefone_responsavel: remoteJid } });
+      let passageiro = await Passageiro.findOne({ where: { telefone_responsavel: remoteJid } });
+
+      // -> Link Mágico: Captura "VAN <motoristaId>" vindo do link wa.me clicável
+      const vanMatch = textMessage.toUpperCase().trim().match(/^VAN\s+(\d+)$/);
+      if (!passageiro && vanMatch) {
+          const motoristaId = parseInt(vanMatch[1]);
+          const motoristaAlvo = await Motorista.findOne({ where: { id: motoristaId, status: 'ativo' } });
+
+          if (!motoristaAlvo) {
+              EvolutionService.sendMessage(remoteJid, `⚠️ Código de van inválido ou expirado. Peça ao motorista para reenviar o link no grupo.`);
+              return;
+          }
+
+          passageiro = await Passageiro.create({
+              nome: 'Aguardando',
+              telefone_responsavel: remoteJid,
+              onboarding_step: 'AGUARDANDO_NOME',
+              motorista_id: motoristaAlvo.id
+          });
+          console.log(`[Onboarding] Passageiro ${remoteJid} vinculado ao motorista ${motoristaAlvo.nome} (ID ${motoristaAlvo.id}) via Link Mágico.`);
+          EvolutionService.sendMessage(remoteJid, `👋 Olá! Bem-vindo(a) ao Assistente da Van do(a) *${motoristaAlvo.nome}*!\nVamos configurar a vaga do passageiro rapidinho.\n\n*1. Qual o nome completo do aluno que irá na Van?*`);
+          return;
+      }
+
       if (passageiro && passageiro.onboarding_step !== 'CONCLUIDO') {
           const passo = passageiro.onboarding_step;
           console.log(`[Onboarding] Pessoas ${remoteJid} respondeu passo: ${passo}`);
@@ -195,6 +236,7 @@ class WebhookController {
           }
           if (passo === 'AGUARDANDO_ENDERECO') {
               const Endereco = require('../models/Endereco');
+              const GeocodeService = require('../services/GeocodeService');
               const linhas = textMessage.split('\n').map(l => l.trim()).filter(l => l.length > 0);
               
               let countCadastrados = 0;
@@ -212,10 +254,24 @@ class WebhookController {
                     enderecoCompleto = match[2].trim();
                  }
 
+                 let latitude = null;
+                 let longitude = null;
+                 try {
+                     const coords = await GeocodeService.getCoordinates(enderecoCompleto);
+                     if (coords) {
+                         latitude = coords.lat;
+                         longitude = coords.lng;
+                     }
+                 } catch (geoErr) {
+                     console.error('[Geocode] Erro na busca de coordenadas:', geoErr);
+                 }
+
                  const novoEndereco = await Endereco.create({
                     passageiro_id: passageiro.id,
                     apelido: apelido,
-                    endereco_completo: enderecoCompleto
+                    endereco_completo: enderecoCompleto,
+                    latitude,
+                    longitude
                  });
 
                  if (i === 0) {
@@ -322,25 +378,31 @@ class WebhookController {
 
        const { id: remoteJid, author, action, participants } = groupData;
        
-       // Detect if this is an "add" event.
+       // Detect se ocorreu ação de Add
        if (action === 'add' && author) {
            console.log(`[Group Validation] Evento Add detectado no grupo ${remoteJid} pelo author ${author}`);
-           // Checks if the user who requested the addition is a paying Motorista
-           const motorista = await Motorista.findOne({ where: { telefone: author } });
+           
+           // Checa se o usuário que disparou isso é nosso motorista pagante ativo
+           const motorista = await Motorista.findOne({ where: { telefone: author, status: 'ativo' } });
 
            if (motorista) {
+               // Valida se o grupo já tá rastreado, senão cria e avisa!
                const [grupo, created] = await GrupoMotorista.findOrCreate({ 
                    where: { group_jid: remoteJid },
                    defaults: { motorista_id: motorista.id, group_jid: remoteJid }
                });
                if (created) {
-                   EvolutionService.sendMessage(remoteJid, `🚙 *Olá pessoal! Fui ativado neste grupo com sucesso pelo motorista ${motorista.nome}.*\n\nPara organizarmos as rotas da Van, preciso que todos enviem a mensagem abaixo aqui no grupo:\n\n*/cadastro*\n\n(Assim que enviarem, mandarei uma mensagem no privado de cada um!)`);
+                   const botPhone = process.env.BOT_PHONE_NUMBER || '5511999999999';
+                   const linkMagico = `https://wa.me/${botPhone}?text=VAN%20${motorista.id}`;
+                   EvolutionService.sendMessage(remoteJid, `🚙 *Olá pessoal! Sou o assistente virtual da Van do(a) ${motorista.nome}.*\n\nPara organizarmos as rotas diárias com inteligência artificial, cliquem no link abaixo para iniciar o cadastro no meu privado:\n\n👉 ${linkMagico}\n\nLá irei pedir Nome, Turno e Endereços rapidinho!`);
                }
            } else {
-               // Non-paying author. If our bot is in the participants list, we leave.
-               // We don't have our own id from body easily, but we can assume if the bot is triggering this payload in a new group via an unknown driver, it should ignore or leave.
-               // Normally: EvolutionService.leaveGroup(remoteJid);
-               console.log(`[Group Validation] Ignore: ${author} não é motorista ativo no banco.`);
+               // Autor que adicionou não é motorista e/ou não tá ativo. Vamos sair se não tivermos esse grupo rodando.
+               const grupoConhecido = await GrupoMotorista.findOne({ where: { group_jid: remoteJid }});
+               if (!grupoConhecido) {
+                   console.log(`[Group Validation] Adicionado em grupo pirata/anônimo por ${author}. Saindo!`);
+                   EvolutionService.leaveGroup(remoteJid);
+               }
            }
        }
     }

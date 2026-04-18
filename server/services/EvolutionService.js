@@ -113,6 +113,29 @@ class EvolutionService {
       return false;
     }
   }
+
+  /**
+   * Remove o bot de um grupo através do id do Grupo
+   */
+  async leaveGroup(groupId) {
+      if (!process.env.EVOLUTION_API_URL || !process.env.EVOLUTION_API_TOKEN) {
+          console.log(`[Evolution Mock] Simulando saída do grupo: ${groupId}`);
+          return true;
+      }
+      try {
+          const instanceName = process.env.INSTANCE_ID || 'van_bot';
+          // EvolutioV2 API endpoint comum para sair de grupos
+          const url = `${process.env.EVOLUTION_API_URL}/group/leaveGroup/${instanceName}`;
+          await axios.post(url, { groupJid: groupId }, {
+              headers: { 'apikey': process.env.EVOLUTION_API_TOKEN }
+          });
+          console.log(`[Evolution] Saiu com sucesso do grupo não autorizado: ${groupId}`);
+          return true;
+      } catch (error) {
+          console.error('[EvolutionService] Erro ao tentar sair de grupo:', error.message);
+          return false;
+      }
+  }
 }
 
 module.exports = new EvolutionService();

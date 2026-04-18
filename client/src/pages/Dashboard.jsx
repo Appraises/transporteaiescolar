@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { DollarSign, Pickaxe, UserCheck, Search, Filter } from 'lucide-react';
+import { DollarSign, Pickaxe, UserCheck, Search, Filter, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 
 const DashboardPage = () => {
   const [stats, setStats] = useState({
     lucroMes: 0,
+    receitaBruta: 0,
+    custosTotais: 0,
     inadimplentes: 0,
     ativos: 0,
     viagensHoje: 0
@@ -47,30 +49,51 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      {/* Stats Area */}
+      {/* Stats Area - Financeiro */}
+      <h3 style={{ fontSize: '16px', color: '#64748b', marginBottom: '16px' }}>Saúde Financeira</h3>
       <div className="stats-grid">
         <div className="flat-panel stat-card">
           <div className="stat-header">
-            <h3>Lucro Estimado Mensal</h3>
+            <h3>Receita Bruta Mensal</h3>
+            <TrendingUp className="text-success" size={20} />
+          </div>
+          <div className="stat-value">R$ {(stats?.receitaBruta || 0).toFixed(2)}</div>
+        </div>
+
+        <div className="flat-panel stat-card">
+          <div className="stat-header">
+            <h3>Gastos do Mês</h3>
+            <TrendingDown style={{ color: '#ef4444' }} size={20} />
+          </div>
+          <div className="stat-value" style={{ color: '#ef4444' }}>R$ {(stats?.custosTotais || 0).toFixed(2)}</div>
+        </div>
+
+        <div className="flat-panel stat-card" style={{ borderBottom: '4px solid #10b981' }}>
+          <div className="stat-header">
+            <h3>Lucro Líquido</h3>
             <DollarSign className="text-success" size={20} />
           </div>
           <div className="stat-value">R$ {(stats?.lucroMes || 0).toFixed(2)}</div>
         </div>
+      </div>
 
-        <div className="flat-panel stat-card">
-          <div className="stat-header">
-            <h3>Alunos Pendentes (Atraso)</h3>
-            <span style={{ color: '#ef4444' }}>⚠️</span>
-          </div>
-          <div className="stat-value text-danger">{stats.inadimplentes}</div>
-        </div>
-
+      {/* Stats Area - Operacional */}
+      <h3 style={{ fontSize: '16px', color: '#64748b', marginTop: '24px', marginBottom: '16px' }}>Operacional</h3>
+      <div className="stats-grid">
         <div className="flat-panel stat-card">
           <div className="stat-header">
             <h3>Total de Alunos Ativos</h3>
             <UserCheck className="text-primary" size={20} />
           </div>
           <div className="stat-value">{stats.ativos}</div>
+        </div>
+
+        <div className="flat-panel stat-card">
+          <div className="stat-header">
+            <h3>Alunos Pendentes (Atraso)</h3>
+            <AlertTriangle style={{ color: '#eab308' }} size={20} />
+          </div>
+          <div className="stat-value" style={{ color: '#eab308' }}>{stats.inadimplentes}</div>
         </div>
       </div>
 
