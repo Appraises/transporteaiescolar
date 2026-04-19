@@ -106,6 +106,20 @@ class WebhookController {
           }
       }
 
+      // 1.5 Tratamento de Localização em Tempo Real (GPS Tracking)
+      if (msgType === 'locationMessage' || msgType === 'liveLocationMessage') {
+          const locData = data.message?.locationMessage || data.message?.liveLocationMessage;
+          if (locData && locData.degreesLatitude && locData.degreesLongitude) {
+              const LiveTrackingService = require('../services/LiveTrackingService');
+              await LiveTrackingService.processLocationUpdate(
+                  remoteJid,
+                  locData.degreesLatitude,
+                  locData.degreesLongitude
+              );
+          }
+          return; // Localização não vai pro funil de texto
+      }
+
       if (!isGroup) {
           const m = await Motorista.findOne({ where: { telefone: remoteJid, status: 'ativo' }});
           if (m) {
@@ -124,6 +138,26 @@ class WebhookController {
                      EvolutionService.sendMessage(remoteJid, `✅ Garagem registrada nas coordenadas detectadas!\nA partir de agora usarei essa base para montar suas rotas.`);
                  } else {
                      EvolutionService.sendMessage(remoteJid, `⚠️ Não consegui achar o endereço no mapa. Mande algo mais completo. Exemplo:\ngaragem Rua XYZ, 110, Bairro - Cidade`);
+                 }
+                 return;
+             }
+
+             // A0b. Comando Escola (Destino da Rota - para aviso no grupo)
+             if (textMessage.toLowerCase().startsWith('escola ')) {
+                 const GeocodeService = require('../services/GeocodeService');
+                 const textoEscola = textMessage.substring(7).trim();
+                 
+                 EvolutionService.sendMessage(remoteJid, `🏫 Processando localização da escola/faculdade...`);
+                 
+                 const coords = await GeocodeService.getCoordinates(textoEscola);
+                 if (coords) {
+                     m.escola_nome = textoEscola.split(',')[0].trim() || textoEscola;
+                     m.escola_latitude = coords.lat;
+                     m.escola_longitude = coords.lng;
+                     await m.save();
+                     EvolutionService.sendMessage(remoteJid, `✅ Escola/Faculdade registrada: *${m.escola_nome}*!\nQuando a van estiver chegando, vou avisar a galera no grupo automaticamente.`);
+                 } else {
+                     EvolutionService.sendMessage(remoteJid, `⚠️ Não achei esse endereço. Tenta algo mais completo. Exemplo:\nescola UFS, São Cristóvão - SE`);
                  }
                  return;
              }
@@ -147,6 +181,39 @@ class WebhookController {
                      }
                      return;
                  }
+             }
+
+             // A2. Comando Raio (Configurar raio de notificação GPS)
+             const raioMatch = textMessage.toLowerCase().trim().match(/^raio\s+(\d+\.?\d*)$/);
+             if (raioMatch) {
+                 const kmValue = parseFloat(raioMatch[1]);
+                 m.raio_notificacao = Math.round(kmValue * 1000); // Converte km para metros
+                 await m.save();
+                 EvolutionService.sendMessage(remoteJid, MessageVariation.rastreamento.raioAlterado(kmValue));
+                 return;
+             }
+
+             // A3. Comando Iniciar Rota (Ativa rastreamento GPS)
+             const iniciarMatch = textMessage.toLowerCase().trim().match(/^iniciar\s+(rota|ida|volta)$/);
+             if (iniciarMatch) {
+                 const Viagem = require('../models/Viagem');
+                 const hojeStr = new Date().toISOString().split('T')[0];
+                 const trechoSolicitado = iniciarMatch[1] === 'rota' ? 'ida' : iniciarMatch[1];
+                 
+                 const viagem = await Viagem.findOne({
+                     where: { motorista_id: m.id, data: hojeStr, status: 'rota_gerada' }
+                 });
+
+                 if (viagem) {
+                     viagem.status = 'em_andamento';
+                     viagem.trecho_ativo = trechoSolicitado;
+                     viagem.parada_atual = 1;
+                     await viagem.save();
+                     EvolutionService.sendMessage(remoteJid, MessageVariation.rastreamento.pedirLocalizacao());
+                 } else {
+                     EvolutionService.sendMessage(remoteJid, `⚠️ Não encontrei nenhuma rota gerada pra hoje. As enquetes já fecharam?`);
+                 }
+                 return;
              }
 
              // B. Pausas Operacionais (Férias e Feriados via LLM)
@@ -337,13 +404,35 @@ class WebhookController {
 
               passageiro.endereco_ida_id = primeiroEnderecoId;
               passageiro.endereco_volta_id = primeiroEnderecoId;
-              passageiro.onboarding_step = 'CONCLUIDO';
+              passageiro.onboarding_step = 'AGUARDANDO_MENSALIDADE';
               await passageiro.save();
               
               const msgConfirm = MessageVariation.enderecos.confirmacao(countCadastrados);
               EvolutionService.sendMessage(remoteJid, msgConfirm);
-              
-              // Notificacao de Meta para o Motorista Responsável
+
+              // Pede a mensalidade com piadinha
+              setTimeout(() => {
+                EvolutionService.sendMessage(remoteJid, `*4. Última pergunta!* 💰\nQual o valor da sua mensalidade da van?\n\n(Ex: 250, 180.50)\n\n⚠️ _Esse valor será verificado pelo motorista, então nem tenta colocar R$ 1,99 que não cola não, hein! 😂🚐_`);
+              }, 2000);
+              return;
+          }
+          if (passo === 'AGUARDANDO_MENSALIDADE') {
+              // Limpa o texto e tenta extrair um número
+              const textoLimpo = textMessage.replace(/[rR]\$/, '').replace(/\s/g, '').replace(',', '.').trim();
+              const valor = parseFloat(textoLimpo);
+
+              if (isNaN(valor) || valor <= 0) {
+                  EvolutionService.sendMessage(remoteJid, `🤔 Não entendi esse valor. Manda só o número, por favor!\nExemplo: *250* ou *180.50*`);
+                  return;
+              }
+
+              passageiro.mensalidade = valor;
+              passageiro.onboarding_step = 'CONCLUIDO';
+              await passageiro.save();
+
+              EvolutionService.sendMessage(remoteJid, `✅ *Cadastro finalizado com sucesso!* 🎉\n\n📋 *Resumo:*\n👤 ${passageiro.nome}\n🕐 Turno: ${passageiro.turno}\n💰 Mensalidade: R$ ${valor.toFixed(2)}\n\nAgora é só ficar de olho na enquete diária no grupo! 🚐`);
+
+              // Notificação de Meta para o Motorista Responsável
               const motorista_resp = await Motorista.findByPk(passageiro.motorista_id);
               if (motorista_resp) {
                   const counts = await Passageiro.count({ where: { motorista_id: motorista_resp.id, turno: passageiro.turno, onboarding_step: 'CONCLUIDO' } });
@@ -360,13 +449,51 @@ class WebhookController {
                       else textMeta = `(Faltam ${meta - counts} alunos para fechar a lista desse turno!)`;
                   }
                   
-                  const notifyText = `🔔 *Novo Aluno a Bordo!*\n\nO(A) responsável/aluno *${passageiro.nome}* concluiu o auto-cadastro para o turno *${passageiro.turno}*.\n\n📊 *Resumo do Turno:* Você tem ${counts} confirmados.\n${textMeta}`;
+                  const notifyText = `🔔 *Novo Aluno a Bordo!*\n\nO(A) responsável/aluno *${passageiro.nome}* concluiu o auto-cadastro para o turno *${passageiro.turno}*.\nMensalidade informada: *R$ ${valor.toFixed(2)}*\n\n📊 *Resumo do Turno:* Você tem ${counts} confirmados.\n${textMeta}`;
                   EvolutionService.sendMessage(motorista_resp.telefone, notifyText);
               }
 
               return;
           }
       } else if (passageiro && passageiro.onboarding_step === 'CONCLUIDO') {
+          // 3.5 Cancelamento de Trecho via LLM (passageiro desiste da ida ou volta)
+          const LlmServiceCancel = require('../services/LlmService');
+          const cancelDetect = await LlmServiceCancel.parseRideCancellation(textMessage);
+
+          if (cancelDetect && cancelDetect.isCancellation) {
+            const cancelarIda = cancelDetect.trecho === 'ida' || cancelDetect.trecho === 'ambos';
+            const cancelarVolta = cancelDetect.trecho === 'volta' || cancelDetect.trecho === 'ambos';
+
+            const Viagem = require('../models/Viagem');
+            const ViagemPassageiro = require('../models/ViagemPassageiro');
+            const hojeStr = new Date().toISOString().split('T')[0];
+
+            // Busca viagens de hoje onde esse passageiro está
+            const vpsHoje = await ViagemPassageiro.findAll({
+              where: { passageiro_id: passageiro.id },
+              include: [{ model: Viagem, where: { data: hojeStr } }]
+            });
+
+            if (vpsHoje.length > 0) {
+              for (const vp of vpsHoje) {
+                if (cancelarIda && vp.status_ida === 'confirmado') vp.status_ida = 'ausente';
+                if (cancelarVolta && vp.status_volta === 'confirmado') vp.status_volta = 'ausente';
+                await vp.save();
+              }
+
+              let trechoMsg = cancelarIda && cancelarVolta ? 'ida e volta' : cancelarIda ? 'ida' : 'volta';
+              EvolutionService.sendMessage(remoteJid, 
+                `✅ Anotado, *${passageiro.nome}*! Tirei você da lista de *${trechoMsg}* de hoje. Se mudar de ideia, é só votar de novo na enquete! 🚐`
+              );
+              return;
+            } else {
+              EvolutionService.sendMessage(remoteJid, 
+                `🤔 *${passageiro.nome}*, não encontrei nenhuma viagem sua cadastrada pra hoje. Será que a enquete ainda não abriu?`
+              );
+              return;
+            }
+          }
+
           // 4. Interceptação de Troca de Endereço Ativo
           const Endereco = require('../models/Endereco');
           const LlmService = require('../services/LlmService');
@@ -407,18 +534,113 @@ class WebhookController {
       const data = body.data;
       if (!data) return;
 
-      // Baileys/Evolution V2: updates em poll message vem geralmente aqui
-      // Como na documentação especifica pode variar as chaves, vamos logar para o Motorista
-      // e simular a chamada nativa de "Votou na Enquete"
       try {
         const updateInfo = typeof data === 'object' && !Array.isArray(data) ? data : data[0]; 
         if (updateInfo && updateInfo.update && updateInfo.update.pollUpdates) {
            const voterJid = updateInfo.key.participant || updateInfo.key.remoteJid;
-           console.log(`[Webhook] Recebeu Polling Update (Voto) de ${voterJid}`);
-           // Puxa passageiro e salva o voto na memória/DB
-           // Para a Fase de Produção, atrelamos VoterJID com Passegeiros.
+           const groupJid = updateInfo.key.remoteJid;
+           console.log(`[Webhook] Recebeu Polling Update (Voto) de ${voterJid} no grupo ${groupJid}`);
+
+           // Extrai a opção selecionada do array de pollUpdates
+           const pollUpdates = updateInfo.update.pollUpdates;
+           let selectedOption = null;
+           for (const pu of pollUpdates) {
+              // Cada pollUpdate tem um .vote com as opções selecionadas
+              if (pu.vote && pu.vote.selectedOptions && pu.vote.selectedOptions.length > 0) {
+                 selectedOption = pu.vote.selectedOptions[0]; // Pega a primeira (selectableCount=1)
+              }
+           }
+
+           if (!selectedOption) {
+              console.log(`[Webhook] Voto sem opção selecionada detectado. Ignorando...`);
+              return;
+           }
+
+           console.log(`[Webhook] Opção votada: "${selectedOption}" por ${voterJid}`);
+
+           // Acha o passageiro pelo telefone (pode estar no telefone_responsavel)
+           const passageiroVotante = await Passageiro.findOne({ 
+              where: { telefone_responsavel: voterJid, onboarding_step: 'CONCLUIDO' }
+           });
+
+           if (!passageiroVotante) {
+              console.log(`[Webhook] Passageiro ${voterJid} não encontrado ou não concluído. Voto ignorado.`);
+              return;
+           }
+
+           // Identifica o motorista pelo grupo
+           const grupoVoto = await GrupoMotorista.findOne({ where: { group_jid: groupJid } });
+           if (!grupoVoto) {
+              console.log(`[Webhook] Grupo ${groupJid} não encontrado no sistema. Voto ignorado.`);
+              return;
+           }
+
+           const Viagem = require('../models/Viagem');
+           const ViagemPassageiro = require('../models/ViagemPassageiro');
+
+           // Descobre o turno pela hora atual (enquete manhã abre ~05h, tarde ~11h, noite ~17h)
+           const horaAtual = new Date().getHours();
+           let turnoVoto = 'manha';
+           if (horaAtual >= 10 && horaAtual < 16) turnoVoto = 'tarde';
+           else if (horaAtual >= 16) turnoVoto = 'noite';
+
+           const hojeStr = new Date().toISOString().split('T')[0];
+
+           // Cria ou encontra a viagem de hoje para esse motorista/turno
+           const [viagem] = await Viagem.findOrCreate({
+              where: { 
+                 data: hojeStr, 
+                 turno: turnoVoto, 
+                 motorista_id: grupoVoto.motorista_id 
+              },
+              defaults: { 
+                 data: hojeStr, 
+                 turno: turnoVoto, 
+                 motorista_id: grupoVoto.motorista_id, 
+                 status: 'pendente' 
+              }
+           });
+
+           // Mapeia a opção escolhida para status_ida e status_volta
+           const opcao = selectedOption.toLowerCase().trim();
+           let statusIda = 'ausente';
+           let statusVolta = 'ausente';
+
+           if (opcao.includes('ida e volta') || opcao.includes('ida & volta')) {
+              statusIda = 'confirmado';
+              statusVolta = 'confirmado';
+           } else if (opcao.includes('só ida') || opcao.includes('so ida')) {
+              statusIda = 'confirmado';
+              statusVolta = 'ausente';
+           } else if (opcao.includes('só volta') || opcao.includes('so volta')) {
+              statusIda = 'ausente';
+              statusVolta = 'confirmado';
+           } else if (opcao.includes('não vou') || opcao.includes('nao vou')) {
+              statusIda = 'ausente';
+              statusVolta = 'ausente';
+           }
+
+           // Upsert: atualiza se já votou, cria se é novo
+           const [vp, criado] = await ViagemPassageiro.findOrCreate({
+              where: { viagem_id: viagem.id, passageiro_id: passageiroVotante.id },
+              defaults: { 
+                 viagem_id: viagem.id, 
+                 passageiro_id: passageiroVotante.id,
+                 status_ida: statusIda, 
+                 status_volta: statusVolta 
+              }
+           });
+
+           if (!criado) {
+              // Atualiza se mudou o voto
+              vp.status_ida = statusIda;
+              vp.status_volta = statusVolta;
+              await vp.save();
+           }
+
+           console.log(`[Webhook] Voto registrado: ${passageiroVotante.nome} -> ida=${statusIda}, volta=${statusVolta} (Viagem #${viagem.id})`);
+
         } else {
-           // Fallback Logging genérico de Update
            console.log(`[Webhook] Outro tipo de Message Update recebido. Ignorando...`);
         }
       } catch(e) {

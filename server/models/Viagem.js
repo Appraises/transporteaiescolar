@@ -22,6 +22,14 @@ const Viagem = sequelize.define('Viagem', {
   status: {
     type: DataTypes.STRING,
     defaultValue: 'pendente', // pendente, rota_gerada, em_andamento, finalizada
+  },
+  parada_atual: {
+    type: DataTypes.INTEGER, // Índice do próximo passageiro na ordem_rota (começa em 1)
+    defaultValue: 1,
+  },
+  trecho_ativo: {
+    type: DataTypes.STRING, // 'ida' ou 'volta' - qual trecho está sendo rastreado
+    allowNull: true,
   }
 }, {
   tableName: 'viagens',

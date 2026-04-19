@@ -51,6 +51,22 @@ const Motorista = sequelize.define('Motorista', {
   pausa_fim: {
     type: DataTypes.DATEONLY, // Formato YYYY-MM-DD
     allowNull: true,
+  },
+  raio_notificacao: {
+    type: DataTypes.INTEGER, // Em metros. Ex: 2500 = 2.5km
+    defaultValue: 2500,
+  },
+  escola_nome: {
+    type: DataTypes.STRING, // Nome da escola/universidade. Ex: "UFS"
+    allowNull: true,
+  },
+  escola_latitude: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  escola_longitude: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
   }
 }, {
   tableName: 'motoristas',

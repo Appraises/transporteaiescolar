@@ -217,6 +217,66 @@ class LlmService {
       return { isPauseCommand: false };
     }
   }
+
+  /**
+   * Analisa se o passageiro quer cancelar a ida, a volta, ou ambos trechos do dia.
+   */
+  async parseRideCancellation(rawText) {
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('[LlmService] GEMINI_API_KEY ausente. Usando mock para parseRideCancellation.');
+      const lower = rawText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (lower.includes('nao volto') || lower.includes('nao vou voltar') || lower.includes('cancela volta') || lower.includes('sem volta')) {
+        return { isCancellation: true, trecho: 'volta' };
+      }
+      if (lower.includes('nao vou ir') || lower.includes('cancela ida') || lower.includes('sem ida')) {
+        return { isCancellation: true, trecho: 'ida' };
+      }
+      if (lower.includes('nao vou hoje') || lower.includes('nao vou mais') || lower.includes('cancela tudo') || lower.includes('nao preciso')) {
+        return { isCancellation: true, trecho: 'ambos' };
+      }
+      return { isCancellation: false };
+    }
+
+    const prompt = `
+      Você é um assistente de uma van escolar. O aluno/responsável enviou a seguinte mensagem:
+      "${rawText}"
+
+      Verifique se esta mensagem indica que a pessoa quer CANCELAR uma viagem de van de hoje.
+      Exemplos de cancelamento:
+      - "não volto hoje" → cancela a VOLTA
+      - "consegui carona pra voltar" → cancela a VOLTA
+      - "não preciso da van na ida" → cancela a IDA
+      - "meu pai vai me levar amanhã" → NÃO é cancelamento (fala de amanhã, não de hoje)
+      - "não vou pra aula hoje" → cancela IDA e VOLTA (ambos)
+      - "tô doente, não vou" → cancela IDA e VOLTA (ambos)
+      - "bom dia" → NÃO é cancelamento
+
+      Retorne EXATAMENTE APENAS um JSON válido (sem markdown), com esta estrutura:
+      {
+        "isCancellation": true ou false,
+        "trecho": "ida" | "volta" | "ambos"
+      }
+
+      Se NÃO for um pedido de cancelamento, retorne:
+      {
+        "isCancellation": false
+      }
+    `;
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      const textOutput = response.text;
+      const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanJsonStr);
+    } catch (error) {
+      console.error('[LlmService] Falha ao extrair cancelamento de viagem:', error);
+      return { isCancellation: false };
+    }
+  }
 }
 
 module.exports = new LlmService();

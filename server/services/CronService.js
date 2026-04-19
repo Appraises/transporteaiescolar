@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const PollService = require('./PollService');
-const ViagemController = require('../controllers/ViagemController');
+// ViagemController não é mais usado aqui - o fechamento gera rotas diretamente
 const Config = require('../models/Config');
 const AntiBanService = require('./AntiBanService');
 const EvolutionService = require('./EvolutionService');
@@ -29,6 +29,66 @@ class CronService {
     
     // Liga o Checador Pró-Ativo de Feriados Nacionais
     this.agendarAlertaFeriado();
+    
+    // Liga a Geração Automática de Mensalidades (dia 1 de cada mês)
+    this.agendarGeracaoMensalidades();
+  }
+
+  agendarGeracaoMensalidades() {
+    if(activeJobs['geracao_mensalidades']) activeJobs['geracao_mensalidades'].stop();
+    
+    // Roda todo dia 1 às 00:05
+    activeJobs['geracao_mensalidades'] = cron.schedule('5 0 1 * *', async () => {
+      console.log('[Cron] Gerando mensalidades do mês...');
+      try {
+        const { Op } = require('sequelize');
+        const hoje = new Date();
+        const mes = hoje.getMonth(); // 0-11
+        const ano = hoje.getFullYear();
+        
+        // Vencimento no dia 10 do mês corrente
+        const dataVencimento = new Date(ano, mes, 10).toISOString().split('T')[0];
+
+        // Busca todos os passageiros ativos com mensalidade cadastrada
+        const passageirosAtivos = await Passageiro.findAll({
+          where: { 
+            onboarding_step: 'CONCLUIDO',
+            mensalidade: { [Op.gt]: 0 }
+          }
+        });
+
+        let criados = 0;
+        for (const p of passageirosAtivos) {
+          // Verifica se já existe cobrança desse mês (evita duplicata)
+          const jaExiste = await Financeiro.findOne({
+            where: {
+              passageiro_id: p.id,
+              data_vencimento: {
+                [Op.between]: [
+                  new Date(ano, mes, 1).toISOString().split('T')[0],
+                  new Date(ano, mes + 1, 0).toISOString().split('T')[0]
+                ]
+              }
+            }
+          });
+
+          if (!jaExiste) {
+            await Financeiro.create({
+              passageiro_id: p.id,
+              valor_mensalidade: p.mensalidade,
+              data_vencimento: dataVencimento,
+              status_pagamento: 'pendente'
+            });
+            criados++;
+          }
+        }
+
+        console.log(`[Cron] ${criados} mensalidade(s) gerada(s) para ${passageirosAtivos.length} passageiro(s) ativo(s).`);
+      } catch (e) {
+        console.error('[Cron] Falha ao gerar mensalidades:', e);
+      }
+    });
+    console.log('[CronService] Geração automática de mensalidades agendada (dia 1, 00:05).');
   }
 
   agendarAlertaFeriado() {
@@ -278,13 +338,132 @@ class CronService {
     const [hhF, mmF] = horaFechamento.split(':');
     const cronFechamento = `${mmF} ${hhF} * * 1-5`; // Seg a Sexta
 
-    activeJobs[`${turnoNome}_fechamento`] = cron.schedule(cronFechamento, () => {
-      console.log(`[Cron] Fechando Rota de ${turnoNome} e enviando para Caminho Ótimo...`);
-      // O mock da rota. Em produção, passaremos o turno e buscaremos quem de fato votou
-      // Utilizando um Req Modificado Mock apenas para preencher o controller 
-      const mockReq = { body: { turno: turnoNome, motoristaId: 1 } };
-      const mockRes = { status: () => ({ json: (data) => console.log('Rota despachada', data) }) };
-      ViagemController.calcularRotaOtima(mockReq, mockRes);
+    activeJobs[`${turnoNome}_fechamento`] = cron.schedule(cronFechamento, async () => {
+      console.log(`[Cron] Fechando Rota de ${turnoNome} e enviando Rota Ótima para os motoristas...`);
+      
+      try {
+        const { Motorista, Viagem, ViagemPassageiro, Passageiro, Endereco } = require('../models');
+        const hojeStr = new Date().toISOString().split('T')[0];
+
+        // Busca todas as viagens de hoje para esse turno
+        const viagensHoje = await Viagem.findAll({
+          where: { data: hojeStr, turno: turnoNome, status: 'pendente' }
+        });
+
+        if (viagensHoje.length === 0) {
+          console.log(`[Cron] Nenhuma viagem pendente encontrada para ${turnoNome} hoje.`);
+          return;
+        }
+
+        for (const viagem of viagensHoje) {
+          const motorista = await Motorista.findByPk(viagem.motorista_id);
+          if (!motorista) continue;
+
+          const coordsBase = {
+            lat: motorista.latitude || -23.550520,
+            lng: motorista.longitude || -46.633308
+          };
+
+          // Busca todos os registros de ViagemPassageiro com seus Passageiros
+          const registrosVoto = await ViagemPassageiro.findAll({
+            where: { viagem_id: viagem.id },
+            include: [{ 
+              model: Passageiro, 
+              include: [
+                { model: Endereco, as: 'enderecoIda' },
+                { model: Endereco, as: 'enderecoVolta' }
+              ]
+            }]
+          });
+
+          // Separa quem vai na ida e quem vai na volta
+          const passageirosIda = registrosVoto
+            .filter(r => r.status_ida === 'confirmado' && r.Passageiro)
+            .map(r => {
+              const p = r.Passageiro;
+              const endIda = p.enderecoIda;
+              return {
+                ...p.toJSON(),
+                latitude: endIda?.latitude || p.latitude,
+                longitude: endIda?.longitude || p.longitude,
+                enderecoFormatado: endIda?.endereco_completo || p.logradouro || p.bairro || 'Sem endereço',
+                vp_id: r.id
+              };
+            })
+            .filter(p => p.latitude && p.longitude);
+
+          const passageirosVolta = registrosVoto
+            .filter(r => r.status_volta === 'confirmado' && r.Passageiro)
+            .map(r => {
+              const p = r.Passageiro;
+              const endVolta = p.enderecoVolta;
+              return {
+                ...p.toJSON(),
+                latitude: endVolta?.latitude || p.latitude,
+                longitude: endVolta?.longitude || p.longitude,
+                enderecoFormatado: endVolta?.endereco_completo || p.logradouro || p.bairro || 'Sem endereço',
+                vp_id: r.id
+              };
+            })
+            .filter(p => p.latitude && p.longitude);
+
+          const RoutingService = require('../services/RoutingService');
+          const MessageVariation = require('../utils/MessageVariation');
+
+          // Gera rota de IDA
+          if (passageirosIda.length > 0) {
+            const resultadoIda = RoutingService.calculateOptimalRoute(passageirosIda, coordsBase);
+            
+            // Monta a lista numerada dos passageiros
+            let listaIda = '';
+            resultadoIda.orderedPath.forEach((aluno, i) => {
+              listaIda += `${i + 2}. ${aluno.nome} - 📍${aluno.enderecoFormatado}\n`;
+            });
+
+            const textIda = MessageVariation.logistica.rotaIda(turnoNome, passageirosIda.length, listaIda);
+
+            // Salva a ordem na tabela pivô
+            for (let i = 0; i < resultadoIda.orderedPath.length; i++) {
+              const vpId = resultadoIda.orderedPath[i].vp_id;
+              if (vpId) {
+                await ViagemPassageiro.update({ ordem_rota: i + 1 }, { where: { id: vpId } });
+              }
+            }
+
+            await EvolutionService.sendMessage(motorista.telefone, textIda);
+          }
+
+          // Gera rota de VOLTA
+          if (passageirosVolta.length > 0) {
+            const resultadoVolta = RoutingService.calculateOptimalRoute(passageirosVolta, coordsBase);
+            
+            let listaVolta = '';
+            resultadoVolta.orderedPath.forEach((aluno, i) => {
+              listaVolta += `${i + 2}. ${aluno.nome} - 📍${aluno.enderecoFormatado}\n`;
+            });
+
+            const textVolta = MessageVariation.logistica.rotaVolta(turnoNome, passageirosVolta.length, listaVolta);
+            await EvolutionService.sendMessage(motorista.telefone, textVolta);
+          }
+
+          // Se ninguém votou, avisa ao motorista
+          if (passageirosIda.length === 0 && passageirosVolta.length === 0) {
+            await EvolutionService.sendMessage(motorista.telefone, MessageVariation.logistica.turnoLivre(turnoNome));
+          }
+
+          // Atualiza status da viagem
+          viagem.status = 'rota_gerada';
+          await viagem.save();
+          console.log(`[Cron] Rota gerada para motorista ${motorista.nome} (Viagem #${viagem.id})`);
+
+          // Pede ao motorista para compartilhar localização em tempo real
+          if (passageirosIda.length > 0 || passageirosVolta.length > 0) {
+            await EvolutionService.sendMessage(motorista.telefone, MessageVariation.rastreamento.pedirLocalizacao());
+          }
+        }
+      } catch (err) {
+        console.error(`[Cron] Erro ao fechar rota de ${turnoNome}:`, err);
+      }
     });
 
     console.log(`[CronService] Turno ${turnoNome} -> Poll: ${horaEnquete} | Fechamento: ${horaFechamento}`);

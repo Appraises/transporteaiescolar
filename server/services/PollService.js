@@ -21,20 +21,15 @@ class PollService {
       
       const payload = {
         number: groupId,
-        options: {
-          delay: 1200,
-          presence: 'composing'
-        },
-        pollMessage: {
-          name: MessageVariation.logistica.pollHeader(turno),
-          options: [
-            "Vou (Ida e Volta)",
-            "Só Ida",
-            "Só Volta",
-            "Não Vou"
-          ],
-          selectableCount: 1
-        }
+        name: MessageVariation.logistica.pollHeader(turno),
+        selectableCount: 1,
+        values: [
+          "Vou (Ida e Volta)",
+          "Só Ida",
+          "Só Volta",
+          "Não Vou"
+        ],
+        delay: 1200
       };
 
       await axios.post(url, payload, {
