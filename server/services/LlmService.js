@@ -1,4 +1,5 @@
 const { GoogleGenAI } = require('@google/genai');
+const GeminiQueueService = require('./GeminiQueueService');
 
 class LlmService {
   constructor() {
@@ -38,10 +39,12 @@ class LlmService {
     `;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
+      const response = await GeminiQueueService.enqueue(() => 
+        this.ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        })
+      );
 
       const textOutput = response.text;
       
@@ -97,10 +100,12 @@ class LlmService {
     `;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
+      const response = await GeminiQueueService.enqueue(() => 
+        this.ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        })
+      );
 
       const textOutput = response.text;
       const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -158,10 +163,12 @@ class LlmService {
     `;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
+      const response = await GeminiQueueService.enqueue(() => 
+        this.ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        })
+      );
 
       const textOutput = response.text;
       const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -204,10 +211,12 @@ class LlmService {
     `;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
+      const response = await GeminiQueueService.enqueue(() => 
+        this.ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        })
+      );
 
       const textOutput = response.text;
       const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -264,10 +273,12 @@ class LlmService {
     `;
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
+      const response = await GeminiQueueService.enqueue(() => 
+        this.ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        })
+      );
 
       const textOutput = response.text;
       const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -276,6 +287,111 @@ class LlmService {
       console.error('[LlmService] Falha ao extrair cancelamento de viagem:', error);
       return { isCancellation: false };
     }
+  }
+
+  /**
+   * Analisa se o lead tem intenção de compra/assinatura.
+   */
+  async parsePurchaseIntent(rawText) {
+    if (!process.env.GEMINI_API_KEY) {
+      const lower = rawText.toLowerCase();
+      return lower.includes('quero') || lower.includes('assinar') || lower.includes('sim') || lower.includes('comprar');
+    }
+
+    const prompt = `
+      Você é um vendedor entusiasta de um sistema de automação para Van Escolar. 
+      O cliente recebeu sua proposta e respondeu: "${rawText}"
+      
+      Analise se ele demonstrou interesse real em assinar, saber mais, receber o PIX ou testar o sistema.
+      Exemplos de interesse: "Quero", "Como faço?", "Aceita PIX?", "Tenho interesse", "Sim".
+      
+      Retorne EXATAMENTE APENAS um JSON válido (sem markdown):
+      {"interested": true ou false}
+    `;
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      const textOutput = response.text;
+      const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+      const result = JSON.parse(cleanJsonStr);
+      return result.interested === true;
+    } catch (error) {
+      console.error('[LlmService] Falha ao detectar intenção de compra:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Extrai dados estruturados para cadastro de um aluno a partir de texto natural.
+   */
+  async extractStudentData(rawText) {
+    if (!process.env.GEMINI_API_KEY) {
+       return { nome: null, turno: 'manha', mensalidade: 0, bairro: null };
+    }
+
+    const prompt = `
+      Você é um assistente de secretaria para uma van escolar. O motorista quer cadastrar um novo aluno e enviou esta frase:
+      "${rawText}"
+
+      Tente extrair o máximo de informações possíveis:
+      - Nome do aluno
+      - Turno (manha, tarde ou noite)
+      - Valor da mensalidade (apenas o número)
+      - Bairro ou Endereço básico
+
+      Retorne EXATAMENTE APENAS um JSON válido (sem markdown):
+      {
+        "nome": "Nome Completo ou null",
+        "turno": "manha | tarde | noite",
+        "mensalidade": <numero_float_ou_0>,
+        "bairro": "Nome do Bairro ou null",
+        "telefone_responsavel": "Número se houver ou null"
+      }
+    `;
+
+    try {
+      const response = await GeminiQueueService.enqueue(() => 
+        this.ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        })
+      );
+
+      const textOutput = response.text;
+      const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanJsonStr);
+    } catch (error) {
+      console.error('[LlmService] Falha ao extrair dados do aluno:', error);
+      return { nome: null, turno: 'manha', mensalidade: 0, bairro: null };
+    }
+  }
+
+  /**
+   * Retorna a mensagem de onboarding (Guia de Comandos) para o Motorista.
+   */
+  getDriverOnboardingMessage(motoristaNome = 'Motorista') {
+    return `👋 *Olá, ${motoristaNome}! Bem-vindo ao Gestor de Transporte Escolar AI!* 🚐💨
+
+Eu sou seu assistente inteligente e estou aqui para automatizar toda a sua logística.
+
+🚀 *Para começar agora:*
+1. *Me adicione no grupo de WhatsApp com seus passageiros.*
+2. Uma vez que eu entrar lá, mandarei automaticamente um link de cadastro para todos.
+
+📋 *Comandos que eu entendo aqui no privado:*
+• *Garagem:* Mande "garagem [seu endereço]" para eu saber de onde você sai.
+• *Escola:* Mande "escola [nome da escola + endereço]" para salvar seus destinos.
+• *Lotação:* Mande "lotacao [manha/tarde/noite] [vagas]" para eu controlar sua ocupação.
+• *Financeiro:* Mande qualquer gasto que eu anoto. Ex: "Gastei 150 de diesel".
+• *Pausas:* Me avise se for sair de férias ou se for feriado: "Entro de férias dia 10".
+
+💡 *Sempre que você mandar uma mensagem que eu não entenda totalmente, eu te mandarei este guia como lembrete!*
+
+_Sou um cérebro digital, pode falar comigo naturalmente!_ 🧠✨`;
   }
 }
 

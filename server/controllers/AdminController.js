@@ -1,12 +1,19 @@
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
 const { Op } = require('sequelize');
 const Motorista = require('../models/Motorista');
 const Assinatura = require('../models/Assinatura');
 const Passageiro = require('../models/Passageiro');
+const LlmService = require('../services/LlmService');
+const EvolutionService = require('../services/EvolutionService');
 const Financeiro = require('../models/Financeiro');
 const Config = require('../models/Config');
 const Endereco = require('../models/Endereco');
+const Despesa = require('../models/Despesa');
+const { normalizePhone } = require('../utils/phoneHelper');
 const CronService = require('../services/CronService');
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'gestor_van_admin_secret_2026';
@@ -134,6 +141,65 @@ class AdminController {
   }
 
   /**
+   * POST /api/admin/motoristas
+   * Cria um motorista manualmente. Bypass do pagamento.
+   */
+  async criarMotorista(req, res) {
+    try {
+      const { nome, telefone, valor_plano } = req.body;
+
+      if (!nome || !telefone) {
+        return res.status(400).json({ error: 'Nome e telefone são obrigatórios.' });
+      }
+
+      // Adiciona sufixo e código do país (55) se necessário
+      const phoneId = normalizePhone(telefone);
+
+      // Verifica se já existe
+      const jaExiste = await Motorista.findOne({ where: { telefone: phoneId } });
+      if (jaExiste) {
+        return res.status(400).json({ error: 'Motorista com este telefone já existe.' });
+      }
+
+      const novoMotorista = await Motorista.create({
+        nome,
+        telefone: phoneId,
+        status: 'ativo'
+      });
+
+      // Cria a assinatura ativa
+      const plano = valor_plano && valor_plano > 0 ? valor_plano : 99.90; // Default
+      await Assinatura.create({
+        motorista_id: novoMotorista.id,
+        valor_plano: plano,
+        status: 'ativo',
+        data_inicio: new Date()
+      });
+
+      // --- ONBOARDING PROATIVO ---
+      // Como o motorista acabou de ser criado/pago, mandamos o tutorial imediatamente
+      try {
+        const welcomeMsg = LlmService.getDriverOnboardingMessage(novoMotorista.nome);
+        await EvolutionService.sendMessage(novoMotorista.telefone, welcomeMsg);
+        
+        // Marca como enviado para não repetir no primeiro 'Oi' (apenas se for General Chat depois)
+        novoMotorista.boas_vindas_enviada = true;
+        await novoMotorista.save();
+        
+        console.log(`[Admin] Onboarding proativo disparado para ${novoMotorista.nome} (${novoMotorista.telefone})`);
+      } catch (err) {
+        console.error('[Admin] Falha ao enviar onboarding proativo:', err.message);
+        // Não barramos a resposta de sucesso do HTTP se apenas o WhatsApp falhar
+      }
+
+      return res.status(201).json({ message: 'Motorista criado com sucesso!', motorista: novoMotorista });
+    } catch (error) {
+      console.error('[AdminController] Erro ao criar motorista:', error);
+      return res.status(500).json({ error: 'Erro ao criar motorista.' });
+    }
+  }
+
+  /**
    * GET /api/admin/motoristas/:id
    * Detalhe completo de um motorista
    */
@@ -141,7 +207,10 @@ class AdminController {
     try {
       const { id } = req.params;
       const motorista = await Motorista.findByPk(id, {
-        include: [{ model: Assinatura }]
+        include: [
+          { model: Assinatura },
+          { model: Despesa }
+        ]
       });
 
       if (!motorista) {
@@ -186,18 +255,69 @@ class AdminController {
         assinatura.valor_plano = valor_plano;
         await assinatura.save();
       } else {
-        assinatura = await Assinatura.create({
+        await Assinatura.create({
           motorista_id: id,
-          valor_plano,
+          valor_plano: valor_plano,
           status: 'ativo',
           data_inicio: new Date()
         });
       }
 
-      return res.status(200).json({ message: 'Plano atualizado.', assinatura });
+      return res.status(200).json({ message: 'Plano atualizado com sucesso!' });
     } catch (error) {
       console.error('[AdminController] Erro ao atualizar plano:', error);
       return res.status(500).json({ error: 'Erro ao atualizar plano.' });
+    }
+  }
+
+  /**
+   * GET /api/admin/evolution/config
+   * Busca as configurações atuais da instância no Evolution API
+   */
+  async getEvolutionConfig(req, res) {
+    try {
+      const settings = await EvolutionService.fetchSettings();
+      const webhook = await EvolutionService.fetchWebhookConfig();
+
+      return res.status(200).json({
+        settings: settings || {},
+        webhook: webhook || {}
+      });
+    } catch (error) {
+      console.error('[AdminController] Erro ao buscar config Evolution:', error);
+      return res.status(500).json({ error: 'Erro ao buscar configurações da Evolution API.' });
+    }
+  }
+
+  /**
+   * POST /api/admin/evolution/config
+   * Atualiza as configurações da instância (Webhook/Settings)
+   */
+  async updateEvolutionConfig(req, res) {
+    try {
+      const { settings, webhook } = req.body;
+
+      if (settings) {
+        await EvolutionService.setInstanceSettings(settings);
+      }
+
+      if (webhook) {
+        // Evolution v2 exige 'url' e 'enabled' no payload
+        const currentWebhook = await EvolutionService.fetchWebhookConfig();
+        const finalWebhook = {
+          enabled: true,
+          url: webhook.url || (currentWebhook && currentWebhook.url) || `${process.env.APP_URL || 'http://localhost:3000'}/webhook/evolution`,
+          base64: !!webhook.base64,
+          // Garante eventos padrão se não houver nenhum, pois são obrigatórios na v2
+          events: (webhook.events && webhook.events.length) ? webhook.events : (currentWebhook && currentWebhook.events && currentWebhook.events.length ? currentWebhook.events : ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'MESSAGES_DELETE', 'SEND_MESSAGE', 'CONNECTION_UPDATE', 'TYPEING_INDICATOR'])
+        };
+        await EvolutionService.setWebhookConfig(finalWebhook);
+      }
+
+      return res.status(200).json({ message: 'Configurações atualizadas com sucesso!' });
+    } catch (error) {
+      console.error('[AdminController] Erro ao atualizar config Evolution:', error);
+      return res.status(500).json({ error: 'Erro ao atualizar configurações da Evolution API.' });
     }
   }
 
@@ -211,8 +331,7 @@ class AdminController {
       const apiToken = process.env.EVOLUTION_API_TOKEN;
       const instanceId = process.env.INSTANCE_ID || 'van_bot';
 
-      if (!evolutionUrl || evolutionUrl === 'http://localhost:8080') {
-        // Modo mock/dev: retorna um QR fake para testar a UI
+      if (!evolutionUrl) {
         return res.status(200).json({
           status: 'mock',
           message: 'Evolution API não configurada. Modo demonstração.',
@@ -245,7 +364,7 @@ class AdminController {
       const apiToken = process.env.EVOLUTION_API_TOKEN;
       const instanceId = process.env.INSTANCE_ID || 'van_bot';
 
-      if (!evolutionUrl || evolutionUrl === 'http://localhost:8080') {
+      if (!evolutionUrl) {
         return res.status(200).json({
           status: 'mock',
           instance: instanceId,
@@ -272,6 +391,42 @@ class AdminController {
         instance: instanceId,
         error: error.message
       });
+    }
+  }
+
+  /**
+   * GET /api/admin/logs
+   * Retorna os últimos logs do PM2 ou erro se não instalado
+   */
+  async getLogs(req, res) {
+    try {
+      // Tenta rodar o comando do PM2
+      // --lines 100 retorna as últimas 100 linhas
+      // --nostream garante que o comando termine e retorne o buffer
+      exec('pm2 logs --lines 100 --nostream', (error, stdout, stderr) => {
+        if (error) {
+          // Se falhar (ex: rodando localmente sem PM2), tenta ler o app.log local
+          const logFilePath = path.join(__dirname, '..', 'app.log');
+          
+          if (fs.existsSync(logFilePath)) {
+            const localLogs = fs.readFileSync(logFilePath, 'utf8');
+            // Retorna as últimas 100 linhas do arquivo
+            const lines = localLogs.split('\n').slice(-100).join('\n');
+            return res.status(200).send(`[MODO LOCAL] Lendo app.log...\n\n${lines}`);
+          }
+
+          return res.status(200).send(
+            `[SISTEMA] PM2 não detectado e arquivo app.log não encontrado.\n` +
+            `[SISTEMA] Verifique se o servidor foi iniciado corretamente.`
+          );
+        }
+
+        // Retorna o output real do PM2
+        return res.status(200).send(stdout || stderr);
+      });
+    } catch (err) {
+      console.error('[AdminController] Erro fatal ao buscar logs:', err);
+      return res.status(500).json({ error: 'Erro ao processar logs do servidor.' });
     }
   }
 
@@ -351,27 +506,34 @@ class AdminController {
   async getMotoristaFinanceiro(req, res) {
     try {
       const { id } = req.params;
-      // Busca todos os passageiros do motorista
+      
+      // 1. Receitas (Mensalidades dos Passageiros)
       const passageiros = await Passageiro.findAll({ where: { motorista_id: id } });
       const pIds = passageiros.map(p => p.id);
-
-      if (pIds.length === 0) return res.status(200).json([]);
-
-      const financas = await Financeiro.findAll({ where: { passageiro_id: pIds } });
       
-      const resultado = financas.map(fin => {
-        const pass = passageiros.find(p => p.id === fin.passageiro_id);
-        return {
-          id: fin.id,
-          nome_passageiro: pass ? pass.nome : 'Desconhecido',
-          turno: pass ? pass.turno : 'N/A',
-          valor: fin.valor_mensalidade,
-          vencimento: fin.data_vencimento,
-          status: fin.status_pagamento
-        };
+      let receitas = [];
+      if (pIds.length > 0) {
+        const financas = await Financeiro.findAll({ where: { passageiro_id: pIds }, order: [['data_vencimento', 'DESC']] });
+        receitas = financas.map(fin => {
+          const pass = passageiros.find(p => p.id === fin.passageiro_id);
+          return {
+            id: fin.id,
+            nome_passageiro: pass ? pass.nome : 'Desconhecido',
+            turno: pass ? pass.turno : 'N/A',
+            valor: fin.valor_mensalidade,
+            vencimento: fin.data_vencimento,
+            status: fin.status_pagamento
+          };
+        });
+      }
+
+      // 2. Despesas (Gastos com a Van via Bot)
+      const despesas = await Despesa.findAll({ 
+        where: { motorista_id: id },
+        order: [['createdAt', 'DESC']]
       });
 
-      return res.status(200).json(resultado);
+      return res.status(200).json({ receitas, despesas });
     } catch (error) {
       console.error('[AdminController] Erro getMotoristaFinanceiro:', error);
       return res.status(500).json({ error: 'Erro ao buscar financeiro do motorista.' });

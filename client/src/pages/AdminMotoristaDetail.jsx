@@ -322,44 +322,90 @@ const AdminMotoristaDetail = () => {
 
           {/* TAB FINANCEIRO */}
           {activeTab === 'financeiro' && (
-            <div className="glass-panel" style={{ padding: '24px' }}>
-              <div className="flex justify-between items-center mb-6">
-                <h2 style={{ color: 'var(--color-text)', fontSize: '18px', fontWeight: 'bold' }}>Faturas de Mensalidade</h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr style={{ background: 'var(--color-surface-hover)', borderBottom: '1px solid var(--color-border)' }}>
-                      <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Status</th>
-                      <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Aluno</th>
-                      <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Vencimento</th>
-                      <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {financeiro.map(f => (
-                      <tr key={f.id} style={{ borderBottom: '1px solid var(--color-border)' }} className="hover:bg-white/5">
-                        <td className="p-4">
-                           <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                             f.status === 'pago' ? 'text-emerald-500' : 
-                             f.status === 'atrasado' ? 'text-red-500' : 
-                             'text-amber-500'
-                           }`} style={{ background: 
-                             f.status === 'pago' ? 'rgba(16, 185, 129, 0.1)' : 
-                             f.status === 'atrasado' ? 'rgba(239, 68, 68, 0.1)' : 
-                             'rgba(245, 158, 11, 0.1)'
-                           }}>
-                              {f.status}
-                           </span>
-                        </td>
-                        <td className="p-4 font-bold" style={{ color: 'var(--color-text)' }}>{f.nome_passageiro} <span className="text-xs font-normal" style={{ color: 'var(--color-text-light)' }}>({f.turno})</span></td>
-                        <td className="p-4" style={{ color: 'var(--color-text-light)' }}>{f.vencimento.split('-').reverse().join('/')}</td>
-                        <td className="p-4 font-bold" style={{ color: 'var(--color-text)' }}>R$ {f.valor.toFixed(2)}</td>
+            <div className="flex flex-col gap-8">
+              {/* Entradas */}
+              <div className="glass-panel" style={{ padding: '24px' }}>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 style={{ color: 'var(--color-text)', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <DollarSign size={20} className="text-emerald-500" /> Mensalidades Alunos (Receitas)
+                  </h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr style={{ background: 'var(--color-surface-hover)', borderBottom: '1px solid var(--color-border)' }}>
+                        <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Status</th>
+                        <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Aluno</th>
+                        <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Vencimento</th>
+                        <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Valor</th>
                       </tr>
-                    ))}
-                    {financeiro.length === 0 && <tr><td colSpan="4" className="p-8 text-center" style={{ color: 'var(--color-text-light)' }}>Nenhum registro financeiro encontrado.</td></tr>}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {(financeiro?.receitas || []).map(f => (
+                        <tr key={f.id} style={{ borderBottom: '1px solid var(--color-border)' }} className="hover:bg-white/5">
+                          <td className="p-4">
+                             <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                               f.status === 'pago' ? 'text-emerald-500' : 
+                               f.status === 'atrasado' ? 'text-red-500' : 
+                               'text-amber-500'
+                             }`} style={{ background: 
+                               f.status === 'pago' ? 'rgba(16, 185, 129, 0.1)' : 
+                               f.status === 'atrasado' ? 'rgba(239, 68, 68, 0.1)' : 
+                               'rgba(245, 158, 11, 0.1)'
+                             }}>
+                                {f.status}
+                             </span>
+                          </td>
+                          <td className="p-4 font-bold" style={{ color: 'var(--color-text)' }}>{f.nome_passageiro} <span className="text-xs font-normal" style={{ color: 'var(--color-text-light)' }}>({f.turno})</span></td>
+                          <td className="p-4" style={{ color: 'var(--color-text-light)' }}>{f.vencimento.split('-').reverse().join('/')}</td>
+                          <td className="p-4 font-bold" style={{ color: 'var(--color-text)' }}>R$ {f.valor.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      {(!financeiro?.receitas || financeiro.receitas.length === 0) && <tr><td colSpan="4" className="p-8 text-center" style={{ color: 'var(--color-text-light)' }}>Nenhuma mensalidade encontrada.</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Saídas */}
+              <div className="glass-panel" style={{ padding: '24px', borderTop: '4px solid #ef4444' }}>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 style={{ color: 'var(--color-text)', fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <TrendingDown size={20} className="text-red-500" /> Despesas da Van (Saídas via Bot)
+                  </h2>
+                  <div className="bg-red-500/10 text-red-500 px-4 py-1 rounded-full text-sm font-bold">
+                    Total: R$ {(financeiro?.despesas || []).reduce((acc, curr) => acc + curr.valor, 0).toFixed(2)}
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr style={{ background: 'var(--color-surface-hover)', borderBottom: '1px solid var(--color-border)' }}>
+                        <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Data</th>
+                        <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Categoria</th>
+                        <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Descrição</th>
+                        <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(financeiro?.despesas || []).map(d => (
+                        <tr key={d.id} style={{ borderBottom: '1px solid var(--color-border)' }} className="hover:bg-white/5">
+                          <td className="p-4" style={{ color: 'var(--color-text-light)' }}>
+                            {new Date(d.createdAt).toLocaleDateString('pt-BR')}
+                          </td>
+                          <td className="p-4">
+                             <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full text-amber-500 bg-amber-500/10">
+                                {d.categoria}
+                             </span>
+                          </td>
+                          <td className="p-4" style={{ color: 'var(--color-text)' }}>{d.descricao}</td>
+                          <td className="p-4 font-bold text-red-500">- R$ {d.valor.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      {(!financeiro?.despesas || financeiro.despesas.length === 0) && <tr><td colSpan="4" className="p-8 text-center" style={{ color: 'var(--color-text-light)' }}>Nenhuma despesa registrada via bot.</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

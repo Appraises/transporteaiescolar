@@ -15,7 +15,13 @@ import {
   Edit2,
   CheckCircle2,
   XCircle,
-  Clock
+  Clock,
+  Terminal,
+  Activity,
+  Settings,
+  Volume2,
+  ShieldAlert,
+  Globe
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -27,6 +33,14 @@ const AdminDashboard = () => {
   const [qrCodeData, setQrCodeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [evolutionLoading, setEvolutionLoading] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [novoMotorista, setNovoMotorista] = useState({ nome: '', telefone: '', valorPlano: '99.90' });
+  const [showLogsModal, setShowLogsModal] = useState(false);
+  const [logsContent, setLogsContent] = useState('');
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [showEvolutionConfig, setShowEvolutionConfig] = useState(false);
+  const [evoConfig, setEvoConfig] = useState({ settings: {}, webhook: {} });
+  const [configSaving, setConfigSaving] = useState(false);
 
   const token = localStorage.getItem('adminToken');
 
@@ -107,6 +121,49 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchLogs = async () => {
+    setLogsLoading(true);
+    setShowLogsModal(true);
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const res = await axios.get('/api/admin/logs', config);
+      setLogsContent(res.data);
+    } catch (e) {
+      setLogsContent('Erro ao carregar logs do servidor.');
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const fetchEvolutionConfig = async () => {
+    try {
+      setEvolutionLoading(true);
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const res = await axios.get('/api/admin/evolution/config', config);
+      setEvoConfig(res.data);
+      setShowEvolutionConfig(true);
+    } catch (e) {
+      alert('Erro ao buscar configurações da Evolution API');
+    } finally {
+      setEvolutionLoading(false);
+    }
+  };
+
+  const saveEvolutionConfig = async () => {
+    setConfigSaving(true);
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.post('/api/admin/evolution/config', evoConfig, config);
+      alert('Configurações salvas com sucesso!');
+      setShowEvolutionConfig(false);
+      fetchAll();
+    } catch (e) {
+      alert('Erro ao salvar configurações');
+    } finally {
+      setConfigSaving(false);
+    }
+  };
+
   const handleUpdatePrice = async (motoristaId) => {
     const novoValor = prompt('Qual o novo valor da mensalidade (R$)?');
     if (!novoValor || isNaN(novoValor)) return;
@@ -120,6 +177,30 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleAddMotorista = async (e) => {
+    if (e) e.preventDefault();
+    
+    if (!novoMotorista.nome || !novoMotorista.telefone) {
+      alert('Nome e telefone são obrigatórios');
+      return;
+    }
+
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.post('/api/admin/motoristas', {
+        nome: novoMotorista.nome,
+        telefone: novoMotorista.telefone,
+        valor_plano: parseFloat(novoMotorista.valorPlano || '99.90')
+      }, config);
+      
+      setShowAddForm(false);
+      setNovoMotorista({ nome: '', telefone: '', valorPlano: '99.90' });
+      fetchAll();
+    } catch (e) {
+      alert(e.response?.data?.error || 'Erro ao adicionar motorista');
+    }
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
@@ -130,7 +211,7 @@ const AdminDashboard = () => {
   );
 
   const filteredMotoristas = motoristas.filter(m => 
-    m.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (m.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
     m.telefone.includes(searchTerm)
   );
 
@@ -159,13 +240,36 @@ const AdminDashboard = () => {
               </div>
               <div style={{ color: 'var(--color-text)' }} className="text-sm font-bold">{evolutionStatus.instance || 'Principal'} {evolutionStatus.mockMode && '(Simulado)'}</div>
            </div>
+           {evolutionStatus.status === 'open' ? (
+             <button 
+               onClick={fetchEvolutionConfig}
+               disabled={evolutionLoading}
+               style={{ background: 'var(--color-surface)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
+               className="ml-4 p-2 rounded-lg transition-colors hover:bg-primary/10"
+               title="Configurações da Instância"
+             >
+               {evolutionLoading ? <RefreshCcw size={18} className="animate-spin"/> : <Settings size={18} />}
+             </button>
+           ) : (
+             <button 
+               onClick={generateQRCode}
+               disabled={evolutionLoading}
+               style={{ background: 'var(--color-surface)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+               className="ml-4 p-2 rounded-lg transition-colors hover:text-primary"
+               title="Conectar WhatsApp"
+             >
+               {evolutionLoading ? <RefreshCcw size={18} className="animate-spin"/> : <QrCode size={18} />}
+             </button>
+           )}
+
            <button 
-             onClick={generateQRCode}
-             disabled={evolutionLoading}
+             onClick={fetchLogs}
              style={{ background: 'var(--color-surface)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
-             className="ml-4 p-2 rounded-lg transition-colors"
+             className="p-2 rounded-lg transition-colors flex items-center gap-2 px-3 text-xs font-bold"
+             title="Ver Logs do Servidor"
            >
-             {evolutionLoading ? <RefreshCcw size={18} className="animate-spin"/> : <QrCode size={18} />}
+             <Terminal size={18} />
+             <span className="hidden lg:inline">Logs PM2</span>
            </button>
         </div>
       </div>
@@ -243,7 +347,7 @@ const AdminDashboard = () => {
                     >Simular Conexão</button>
                 </div>
               ) : (
-                <img src={qrCodeData.code} alt="QR Code" className="w-64 h-64" />
+                <img src={qrCodeData.base64} alt="QR Code" className="w-64 h-64" />
               )}
            </div>
            
@@ -256,7 +360,17 @@ const AdminDashboard = () => {
       {/* Main Content Area */}
       <div className="glass-panel" style={{ padding: '0', overflow: 'hidden' }}>
          <div style={{ padding: '24px', borderBottom: '1px solid var(--color-border)' }} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h3 style={{ color: 'var(--color-text)' }} className="text-xl font-bold">Central de Motoristas</h3>
+            <h3 style={{ color: 'var(--color-text)' }} className="text-xl font-bold flex items-center gap-4">
+              Central de Motoristas
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                style={{ background: showAddForm ? 'var(--color-surface)' : 'var(--color-primary)', color: showAddForm ? 'var(--color-text)' : 'white', border: showAddForm ? '1px solid var(--color-border)' : 'none', cursor: 'pointer' }}
+                className="text-sm px-4 py-1.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity font-bold shadow-lg shadow-amber-500/20"
+              >
+                {showAddForm ? <XCircle size={16} /> : <UserPlus size={16} strokeWidth={3} />}
+                {showAddForm ? 'Cancelar' : 'Novo'}
+              </button>
+            </h3>
             <div className="relative">
                <Search style={{ color: 'var(--color-text-light)' }} className="absolute left-3 top-2.5" size={18} />
                <input 
@@ -269,6 +383,52 @@ const AdminDashboard = () => {
                />
             </div>
          </div>
+
+         {showAddForm && (
+           <div className="p-6 border-b border-[var(--color-border)] bg-[var(--color-surface-hover)] animate-in slide-in-from-top-2 duration-300">
+             <form onSubmit={handleAddMotorista} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div className="flex flex-col gap-1.5">
+                   <label className="text-[10px] font-black uppercase text-slate-500 ml-1">Nome do Motorista</label>
+                   <input 
+                     type="text" 
+                     placeholder="Ex: João da Silva"
+                     className="search-input w-full"
+                     value={novoMotorista.nome}
+                     onChange={e => setNovoMotorista({...novoMotorista, nome: e.target.value})}
+                     required
+                   />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                   <label className="text-[10px] font-black uppercase text-slate-500 ml-1">WhatsApp (DDD + Número)</label>
+                   <input 
+                     type="text" 
+                     placeholder="Ex: 11999999999"
+                     className="search-input w-full"
+                     value={novoMotorista.telefone}
+                     onChange={e => setNovoMotorista({...novoMotorista, telefone: e.target.value})}
+                     required
+                   />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                   <label className="text-[10px] font-black uppercase text-slate-500 ml-1">Valor do Plano (R$)</label>
+                   <input 
+                     type="number" 
+                     step="0.01"
+                     placeholder="99.90"
+                     className="search-input w-full"
+                     value={novoMotorista.valorPlano}
+                     onChange={e => setNovoMotorista({...novoMotorista, valorPlano: e.target.value})}
+                   />
+                </div>
+                <button 
+                  type="submit"
+                  className="bg-emerald-600 text-white font-bold h-[38px] rounded-xl hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2"
+                >
+                   <CheckCircle2 size={18} /> Confirmar Cadastro
+                </button>
+             </form>
+           </div>
+         )}
 
          <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -286,11 +446,11 @@ const AdminDashboard = () => {
                <tbody>
                   {filteredMotoristas.map((m) => (
                      <tr key={m.id} style={{ borderBottom: '1px solid var(--color-border)' }} className="group">
-                        <td style={{ color: 'var(--color-text-light)' }} className="p-4 font-mono text-xs">{m.numero.toString().padStart(2, '0')}</td>
+                        <td style={{ color: 'var(--color-text-light)' }} className="p-4 font-mono text-xs">{(m.id || 0).toString().padStart(2, '0')}</td>
                         <td className="p-4">
                            <div className="flex items-center gap-3">
                               <div style={{ background: 'var(--color-surface-hover)', color: 'var(--color-text)' }} className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm">
-                                 {m.nome.charAt(0)}
+                                 {(m.nome || '?').charAt(0)}
                               </div>
                               <div>
                                  <div style={{ color: 'var(--color-text)' }} className="text-sm font-bold group-hover:text-primary transition-colors">{m.nome}</div>
@@ -340,17 +500,176 @@ const AdminDashboard = () => {
                      </tr>
                   ))}
                   {filteredMotoristas.length === 0 && (
-                    <tr>
-                      <td colSpan="7" style={{ color: 'var(--color-text-light)' }} className="p-10 text-center font-medium">
-                        Nenhum motorista encontrado com os filtros atuais.
-                      </td>
-                    </tr>
+                     <tr>
+                        <td colSpan="7" style={{ color: 'var(--color-text-light)' }} className="p-10 text-center font-medium">
+                           Nenhum motorista encontrado com os filtros atuais.
+                        </td>
+                     </tr>
                   )}
                </tbody>
             </table>
          </div>
       </div>
-    </div>
+
+      {/* MODAL DE LOGS PM2 */}
+      {showLogsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-slate-900 w-full max-w-4xl h-[80vh] rounded-3xl border border-slate-700 flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                  <Activity size={20} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Logs do Servidor (PM2)</h2>
+                  <p className="text-xs text-slate-400">Monitoramento em tempo real do processo Node.js</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={fetchLogs}
+                  disabled={logsLoading}
+                  className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors flex items-center gap-2"
+                >
+                  {logsLoading ? <RefreshCcw size={16} className="animate-spin" /> : <RefreshCcw size={16} />}
+                  Atualizar
+                </button>
+                <button 
+                  onClick={() => setShowLogsModal(false)}
+                  className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-6 bg-black/40">
+              {logsLoading && !logsContent ? (
+                <div className="h-full flex items-center justify-center text-slate-500 gap-3">
+                  <RefreshCcw className="animate-spin" /> Carregando logs...
+                </div>
+              ) : (
+                <pre className="font-mono text-xs md:text-sm text-emerald-400 whitespace-pre-wrap leading-relaxed">
+                  {logsContent || 'Nenhum log disponível no momento.'}
+                </pre>
+              )}
+            </div>
+            
+            <div className="p-4 bg-slate-950 border-t border-slate-800 text-[10px] text-slate-500 flex justify-between font-mono">
+              <span>ESTADO: LIVE</span>
+              <span>ULTIMA ATUALIZAÇÃO: {new Date().toLocaleTimeString()}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Configuração Evolution */}
+      {showEvolutionConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="glass-panel w-full max-w-lg p-8 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3 text-primary">
+                <Settings size={28} />
+                <div>
+                  <h2 className="text-xl font-bold text-white">Configurações do Robô</h2>
+                  <p className="text-xs text-slate-400">Instância: {evolutionStatus.instance}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowEvolutionConfig(false)}
+                className="text-slate-500 hover:text-white transition-colors"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* WHISPER / BASE64 */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <Volume2 size={20} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">Transcrição Whisper</div>
+                    <div className="text-[10px] text-slate-400">Ativa envio de Base64 para IA ouvir áudios</div>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setEvoConfig({
+                    ...evoConfig,
+                    webhook: { ...evoConfig.webhook, base64: !evoConfig.webhook?.base64 }
+                  })}
+                  className={`w-12 h-6 rounded-full transition-all relative ${evoConfig.webhook?.base64 ? 'bg-amber-500' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${evoConfig.webhook?.base64 ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+
+              {/* REJECT CALL */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
+                    <ShieldAlert size={20} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">Rejeitar Chamadas</div>
+                    <div className="text-[10px] text-slate-400">Desliga automaticamente ligações de voz/vídeo</div>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setEvoConfig({
+                    ...evoConfig,
+                    settings: { ...evoConfig.settings, rejectCall: !evoConfig.settings?.rejectCall }
+                  })}
+                  className={`w-12 h-6 rounded-full transition-all relative ${evoConfig.settings?.rejectCall ? 'bg-red-500' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${evoConfig.settings?.rejectCall ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+
+              {/* ALWAYS ONLINE */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                    <Globe size={20} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">Sempre Online</div>
+                    <div className="text-[10px] text-slate-400">Mantém o status "Online" no WhatsApp</div>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setEvoConfig({
+                    ...evoConfig,
+                    settings: { ...evoConfig.settings, alwaysOnline: !evoConfig.settings?.alwaysOnline }
+                  })}
+                  className={`w-12 h-6 rounded-full transition-all relative ${evoConfig.settings?.alwaysOnline ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${evoConfig.settings?.alwaysOnline ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-10 flex gap-4">
+               <button 
+                 onClick={() => setShowEvolutionConfig(false)}
+                 className="flex-1 p-3 rounded-2xl font-bold text-sm text-slate-400 bg-slate-800/50 hover:bg-slate-800 transition-all border border-slate-700"
+               >
+                 Cancelar
+               </button>
+               <button 
+                 onClick={saveEvolutionConfig}
+                 disabled={configSaving}
+                 className="flex-1 p-3 rounded-2xl font-black text-sm text-white bg-primary hover:brightness-110 transition-all flex items-center justify-center gap-2"
+               >
+                 {configSaving ? <RefreshCcw className="animate-spin" size={18} /> : 'Salvar Alterações'}
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+   </div>
   );
 };
 

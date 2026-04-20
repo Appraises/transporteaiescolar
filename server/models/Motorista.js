@@ -9,7 +9,7 @@ const Motorista = sequelize.define('Motorista', {
   },
   nome: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   telefone: {
     type: DataTypes.STRING,
@@ -19,6 +19,10 @@ const Motorista = sequelize.define('Motorista', {
   status: {
     type: DataTypes.STRING,
     defaultValue: 'ativo',
+  },
+  venda_etapa: {
+    type: DataTypes.STRING, // APRESENTACAO, AGUARDANDO_PAGAMENTO, AGUARDANDO_NOME
+    allowNull: true,
   },
   latitude: {
     type: DataTypes.FLOAT,
@@ -67,6 +71,10 @@ const Motorista = sequelize.define('Motorista', {
   escola_longitude: {
     type: DataTypes.FLOAT,
     allowNull: true,
+  },
+  boas_vindas_enviada: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   }
 }, {
   tableName: 'motoristas',

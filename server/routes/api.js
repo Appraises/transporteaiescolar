@@ -32,10 +32,14 @@ router.post('/viagens/calcular-rota', ViagemController.calcularRotaOtima);
 router.post('/admin/login', AdminController.login);
 router.get('/admin/stats', adminAuth, AdminController.getStats);
 router.get('/admin/motoristas', adminAuth, AdminController.listarMotoristas);
+router.post('/admin/motoristas', adminAuth, AdminController.criarMotorista);
 router.get('/admin/motoristas/:id', adminAuth, AdminController.detalheMotorista);
 router.put('/admin/motoristas/:id/plano', adminAuth, AdminController.atualizarPlano);
 router.get('/admin/evolution/qrcode', adminAuth, AdminController.getQRCode);
 router.get('/admin/evolution/status', adminAuth, AdminController.getEvolutionStatus);
+router.get('/admin/evolution/config', adminAuth, AdminController.getEvolutionConfig);
+router.post('/admin/evolution/config', adminAuth, AdminController.updateEvolutionConfig);
+router.get('/admin/logs', adminAuth, AdminController.getLogs);
 
 // ========== ROTAS ADMIN GESTÃO DE MOTORISTA ==========
 router.get('/admin/motoristas/:id/alunos', adminAuth, AdminController.getMotoristaAlunos);

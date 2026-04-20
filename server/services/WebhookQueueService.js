@@ -6,6 +6,9 @@
  * sejam agrupadas antes de acionar a LLM e regras de negócio.
  */
 const LlmService = require('./LlmService');
+const EvolutionService = require('./EvolutionService');
+const Motorista = require('../models/Motorista');
+const { normalizePhone } = require('../utils/phoneHelper');
 
 class WebhookQueueService {
   constructor() {
@@ -62,7 +65,25 @@ class WebhookQueueService {
         
         console.log(`[QueueService] 🧠 Intenção detectada para ${remoteJid}:`, intention);
         
-        // Futuro: Routear "action" para os Controllers de BD e retornar via EvolutionAPI
+        const normalizedJid = normalizePhone(remoteJid);
+
+        // 1. Verificar se é um Motorista e se precisa de Boas-vindas ou se é General Chat
+        const motorista = await Motorista.findOne({ where: { telefone: normalizedJid, status: 'ativo' } });
+        
+        if (motorista) {
+           if (!motorista.boas_vindas_enviada || intention.action === 'GENERAL_CHAT') {
+              const guideMessage = LlmService.getDriverOnboardingMessage(motorista.nome);
+              await EvolutionService.sendMessage(remoteJid, guideMessage);
+              
+              if (!motorista.boas_vindas_enviada) {
+                 motorista.boas_vindas_enviada = true;
+                 await motorista.save();
+              }
+              return; // Bloqueia outros processamentos para não poluir
+           }
+        }
+
+        // 2. Roteamento de comandos específicos (Futuro)
         if (intention.action === 'REGISTER_STUDENT') {
            // ControllerFinanceiro.etc
         }

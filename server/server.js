@@ -1,6 +1,24 @@
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+
+// --- SISTEMA DE LOGS PARA DEBUG NO PAINEL ---
+const logFile = path.join(__dirname, 'app.log');
+fs.writeFileSync(logFile, `[SISTEMA] Log iniciado em ${new Date().toLocaleString()}\n`);
+
+const patchConsole = (method) => {
+  const original = console[method];
+  console[method] = (...args) => {
+    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+    fs.appendFileSync(logFile, `${new Date().toLocaleTimeString()} [${method.toUpperCase()}] ${msg}\n`);
+    original.apply(console, args);
+  };
+};
+['log', 'error', 'warn', 'info'].forEach(patchConsole);
+// ------------------------------------------
+
 const { sequelize } = require('./models');
 const routes = require('./routes');
 const CronService = require('./services/CronService');
