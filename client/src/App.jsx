@@ -1,15 +1,18 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { Home, Users, DollarSign, Settings, LogOut, Menu, Bus } from 'lucide-react';
+import { Home, Users, DollarSign, Settings, LogOut, Menu, Bus, Moon, Sun } from 'lucide-react';
 import DashboardPage from './pages/Dashboard';
 import LoginPage from './pages/Login';
 import ConfigPage from './pages/Config';
 import AlunosPage from './pages/AlunosPage';
 import FinanceiroPage from './pages/FinanceiroPage';
 import LandingPage from './pages/LandingPage';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
+import AdminMotoristaDetail from './pages/AdminMotoristaDetail';
 import './index.css';
 
-const Layout = ({ children, logout }) => {
+const Layout = ({ children, logout, theme, toggleTheme }) => {
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
     const location = useLocation();
 
@@ -24,17 +27,19 @@ const Layout = ({ children, logout }) => {
         display: 'flex',
         alignItems: 'center',
         gap: '0.75rem',
-        backgroundColor: isActive(path) ? 'white' : 'transparent',
-        color: isActive(path) ? 'var(--color-primary)' : 'white',
+        backgroundColor: isActive(path) ? 'rgba(255,255,255,0.2)' : 'transparent',
+        color: 'white',
         fontWeight: isActive(path) ? '600' : 'normal'
     });
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-background)', transition: 'background-color 0.3s' }}>
             {/* Sidebar - Desktop */}
             <aside style={{
                 width: '250px',
-                backgroundColor: 'var(--color-primary)',
+                background: 'linear-gradient(180deg, rgba(249, 115, 22, 0.95), rgba(234, 88, 12, 0.9))',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
                 color: 'white',
                 display: window.innerWidth > 768 ? 'flex' : 'none',
                 flexDirection: 'column',
@@ -57,6 +62,21 @@ const Layout = ({ children, logout }) => {
                 </nav>
 
                 <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <button onClick={toggleTheme} style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        borderRadius: 'var(--border-radius)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        color: 'white',
+                        border: 'none',
+                        cursor: 'pointer',
+                    }}>
+                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />} 
+                        {theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}
+                    </button>
                     <button onClick={logout} style={{
                         width: '100%',
                         padding: '0.75rem',
@@ -79,7 +99,7 @@ const Layout = ({ children, logout }) => {
                 {/* Mobile Header */}
                 <header style={{
                     padding: '1rem',
-                    backgroundColor: 'white',
+                    backgroundColor: 'var(--color-surface)',
                     boxShadow: 'var(--shadow-sm)',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -89,9 +109,14 @@ const Layout = ({ children, logout }) => {
                         <Bus size={28} />
                         Gestor Van
                     </span>
-                    <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                        <Menu size={24} color="var(--color-primary)" />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)' }}>
+                            {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+                        </button>
+                        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                            <Menu size={24} color="var(--color-primary)" />
+                        </button>
+                    </div>
                 </header>
 
                 {/* Mobile Navigation Overlay */}
@@ -99,9 +124,12 @@ const Layout = ({ children, logout }) => {
                     <div className="mobile-nav-overlay" style={{
                         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                         backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999,
+                        backdropFilter: 'blur(4px)'
                     }} onClick={() => setMobileMenuOpen(false)}>
                         <nav style={{
-                            width: '280px', height: '100%', backgroundColor: 'var(--color-primary)',
+                            width: '280px', height: '100%', 
+                            background: 'linear-gradient(180deg, rgba(249, 115, 22, 0.95), rgba(234, 88, 12, 0.9))',
+                            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
                             padding: '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
                             overflowY: 'auto',
                         }} onClick={e => e.stopPropagation()}>
@@ -133,7 +161,7 @@ const Layout = ({ children, logout }) => {
                     </div>
                 )}
 
-                <div style={{ padding: '24px' }} className="container bg-slate-50 min-h-screen">
+                <div style={{ padding: '24px' }} className="container min-h-screen">
                     {children}
                 </div>
             </main>
@@ -154,8 +182,17 @@ const AdminProtectedRoute = ({ children }) => {
 };
 
 function App() {
-    // Estado super simples substituindo AuthContext para nosso protótipo base
     const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+    const [theme, setTheme] = React.useState(localStorage.getItem('theme') || 'light');
+
+    React.useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
 
     const logout = () => setIsAuthenticated(false);
 
@@ -174,10 +211,15 @@ function App() {
                         <AdminDashboard />
                     </AdminProtectedRoute>
                 } />
+                <Route path="/admin/motorista/:id" element={
+                    <AdminProtectedRoute>
+                        <AdminMotoristaDetail />
+                    </AdminProtectedRoute>
+                } />
                 
                 <Route path="/*" element={
                     <ProtectedRoute isAuthenticated={isAuthenticated}>
-                        <Layout logout={logout}>
+                        <Layout logout={logout} theme={theme} toggleTheme={toggleTheme}>
                             <Routes>
                                 <Route path="/" element={<DashboardPage />} />
                                 <Route path="/alunos" element={<AlunosPage />} />

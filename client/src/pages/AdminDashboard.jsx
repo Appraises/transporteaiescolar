@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Users, 
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [motoristas, setMotoristas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -133,34 +135,35 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-300 font-sans p-4 md:p-8">
+    <div style={{ minHeight: '100vh', background: 'var(--color-background)', color: 'var(--color-text)', padding: '16px' }} className="md:p-8 font-sans">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
-          <h1 className="text-3xl font-black text-white flex items-center gap-3">
-             <span className="bg-amber-400 text-slate-900 p-2 rounded-xl transform -rotate-3"><Users size={24} strokeWidth={3}/></span>
+          <h1 style={{ color: 'var(--color-text)' }} className="text-3xl font-black flex items-center gap-3">
+             <span style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', color: 'white', padding: '8px', borderRadius: '12px', transform: 'rotate(-3deg)' }}><Users size={24} strokeWidth={3}/></span>
              Painel Master Admin
           </h1>
-          <p className="text-slate-500 mt-2">Visão consolidada do SaaS Gestor Van</p>
+          <p style={{ color: 'var(--color-text-light)' }} className="mt-2">Visão consolidada do SaaS Gestor Van</p>
         </div>
         
-        <div className="flex items-center gap-4 bg-slate-900 border border-slate-800 p-2 rounded-2xl pr-6">
-           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${evolutionStatus.status === 'open' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+        <div className="glass-panel flex items-center gap-4 p-2 rounded-2xl pr-6">
+           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${evolutionStatus.status === 'open' ? 'text-emerald-500' : 'text-amber-500'}`} style={{ background: evolutionStatus.status === 'open' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }}>
               <Smartphone size={20} />
            </div>
            <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Instância Evolution</span>
-                <span className={`flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${evolutionStatus.status === 'open' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                <span style={{ color: 'var(--color-text-light)' }} className="text-xs font-bold uppercase tracking-wider">Instância Evolution</span>
+                <span className={`flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${evolutionStatus.status === 'open' ? 'text-emerald-500' : 'text-amber-500'}`} style={{ background: evolutionStatus.status === 'open' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }}>
                    <Circle size={8} fill="currentColor"/> {evolutionStatus.status === 'open' ? 'Conectado' : 'Desconectado'}
                 </span>
               </div>
-              <div className="text-sm font-bold text-white">{evolutionStatus.instance || 'Principal'} {evolutionStatus.mockMode && '(Simulado)'}</div>
+              <div style={{ color: 'var(--color-text)' }} className="text-sm font-bold">{evolutionStatus.instance || 'Principal'} {evolutionStatus.mockMode && '(Simulado)'}</div>
            </div>
            <button 
              onClick={generateQRCode}
              disabled={evolutionLoading}
-             className="ml-4 bg-white/5 hover:bg-white/10 p-2 rounded-lg transition-colors border border-white/5"
+             style={{ background: 'var(--color-surface)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+             className="ml-4 p-2 rounded-lg transition-colors"
            >
              {evolutionLoading ? <RefreshCcw size={18} className="animate-spin"/> : <QrCode size={18} />}
            </button>
@@ -169,57 +172,53 @@ const AdminDashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl relative overflow-hidden group">
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all"></div>
+        <div className="glass-panel stat-card relative overflow-hidden group">
           <div className="flex items-center gap-4 mb-4">
-             <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center">
+             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-emerald-500" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
                 <DollarSign size={24} />
              </div>
-             <span className="text-sm font-bold text-slate-500 uppercase">MRR (Recorrente)</span>
+             <span style={{ color: 'var(--color-text-light)' }} className="text-sm font-bold uppercase">MRR (Recorrente)</span>
           </div>
-          <div className="text-3xl font-black text-white">R$ {(stats?.mrr || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+          <div style={{ color: 'var(--color-text)' }} className="text-3xl font-black">R$ {(stats?.mrr || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
           <div className="text-xs text-emerald-500 font-bold mt-2 flex items-center gap-1">
              <CheckCircle2 size={12}/> Receita total de {stats?.totalAssinaturas} ativos
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl relative overflow-hidden group">
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all"></div>
+        <div className="glass-panel stat-card relative overflow-hidden group">
           <div className="flex items-center gap-4 mb-4">
-             <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center">
+             <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ color: 'var(--color-primary)', background: 'rgba(249, 115, 22, 0.1)' }}>
                 <UserPlus size={24} />
              </div>
-             <span className="text-sm font-bold text-slate-500 uppercase">Motoristas Ativos</span>
+             <span style={{ color: 'var(--color-text-light)' }} className="text-sm font-bold uppercase">Motoristas Ativos</span>
           </div>
-          <div className="text-3xl font-black text-white">{stats?.motoristasAtivos}</div>
-          <div className="text-xs text-slate-500 font-bold mt-2 flex items-center gap-1">
+          <div style={{ color: 'var(--color-text)' }} className="text-3xl font-black">{stats?.motoristasAtivos}</div>
+          <div style={{ color: 'var(--color-text-light)' }} className="text-xs font-bold mt-2 flex items-center gap-1">
              Total de {stats?.totalMotoristas} cadastrados
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl relative overflow-hidden group">
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all"></div>
+        <div className="glass-panel stat-card relative overflow-hidden group">
           <div className="flex items-center gap-4 mb-4">
-             <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center">
+             <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ color: 'var(--color-error)', background: 'rgba(239, 68, 68, 0.1)' }}>
                 <TrendingDown size={24} />
              </div>
-             <span className="text-sm font-bold text-slate-500 uppercase">Churn Rate</span>
+             <span style={{ color: 'var(--color-text-light)' }} className="text-sm font-bold uppercase">Churn Rate</span>
           </div>
-          <div className="text-3xl font-black text-white">{stats?.churnRate}%</div>
-          <div className="text-xs text-amber-500 font-bold mt-2 flex items-center gap-1">
+          <div style={{ color: 'var(--color-text)' }} className="text-3xl font-black">{stats?.churnRate}%</div>
+          <div style={{ color: 'var(--color-error)' }} className="text-xs font-bold mt-2 flex items-center gap-1">
              {stats?.canceladosMes} cancelamentos este mês
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl relative overflow-hidden group">
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-all"></div>
+        <div className="glass-panel stat-card relative overflow-hidden group">
           <div className="flex items-center gap-4 mb-4">
-             <div className="w-12 h-12 bg-purple-500/10 text-purple-500 rounded-2xl flex items-center justify-center">
+             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-purple-500" style={{ background: 'rgba(168, 85, 247, 0.1)' }}>
                 <Users size={24} />
              </div>
-             <span className="text-sm font-bold text-slate-500 uppercase">Total Passageiros</span>
+             <span style={{ color: 'var(--color-text-light)' }} className="text-sm font-bold uppercase">Total Passageiros</span>
           </div>
-          <div className="text-3xl font-black text-white">{stats?.totalPassageiros}</div>
+          <div style={{ color: 'var(--color-text)' }} className="text-3xl font-black">{stats?.totalPassageiros}</div>
           <div className="text-xs text-purple-500 font-bold mt-2 flex items-center gap-1">
              Volume total de usuários no bot
           </div>
@@ -255,17 +254,18 @@ const AdminDashboard = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-         <div className="p-6 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h3 className="text-xl font-bold text-white">Central de Motoristas</h3>
+      <div className="glass-panel" style={{ padding: '0', overflow: 'hidden' }}>
+         <div style={{ padding: '24px', borderBottom: '1px solid var(--color-border)' }} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h3 style={{ color: 'var(--color-text)' }} className="text-xl font-bold">Central de Motoristas</h3>
             <div className="relative">
-               <Search className="absolute left-3 top-2.5 text-slate-500" size={18} />
+               <Search style={{ color: 'var(--color-text-light)' }} className="absolute left-3 top-2.5" size={18} />
                <input 
                  type="text" 
                  placeholder="Buscar motorista ou telefone..."
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
-                 className="bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-amber-400/50 w-full md:w-64"
+                 className="search-input w-full md:w-64"
+                 style={{ paddingLeft: '38px', height: '38px', margin: 0 }}
                />
             </div>
          </div>
@@ -273,63 +273,66 @@ const AdminDashboard = () => {
          <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
                <thead>
-                  <tr className="bg-slate-950/50">
-                     <th className="p-4 text-xs font-black uppercase text-slate-500">#</th>
-                     <th className="p-4 text-xs font-black uppercase text-slate-500">Motorista</th>
-                     <th className="p-4 text-xs font-black uppercase text-slate-500">Status</th>
-                     <th className="p-4 text-xs font-black uppercase text-slate-500">Passageiros</th>
-                     <th className="p-4 text-xs font-black uppercase text-slate-500">Plano Mensal</th>
-                     <th className="p-4 text-xs font-black uppercase text-slate-500">Data Ativação</th>
-                     <th className="p-4 text-xs font-black uppercase text-slate-500 text-right">Ações</th>
+                  <tr style={{ background: 'var(--color-surface-hover)', borderBottom: '1px solid var(--color-border)' }}>
+                     <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">#</th>
+                     <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Motorista</th>
+                     <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Status</th>
+                     <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Passageiros</th>
+                     <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Plano Mensal</th>
+                     <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase">Data Ativação</th>
+                     <th style={{ color: 'var(--color-text-light)' }} className="p-4 text-xs font-black uppercase text-right">Ações</th>
                   </tr>
                </thead>
-               <tbody className="divide-y divide-slate-800">
+               <tbody>
                   {filteredMotoristas.map((m) => (
-                     <tr key={m.id} className="hover:bg-white/5 transition-colors group">
-                        <td className="p-4 font-mono text-xs text-slate-500">{m.numero.toString().padStart(2, '0')}</td>
+                     <tr key={m.id} style={{ borderBottom: '1px solid var(--color-border)' }} className="group">
+                        <td style={{ color: 'var(--color-text-light)' }} className="p-4 font-mono text-xs">{m.numero.toString().padStart(2, '0')}</td>
                         <td className="p-4">
                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold text-sm">
+                              <div style={{ background: 'var(--color-surface-hover)', color: 'var(--color-text)' }} className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm">
                                  {m.nome.charAt(0)}
                               </div>
                               <div>
-                                 <div className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors">{m.nome}</div>
-                                 <div className="text-xs text-slate-500">{m.telefone.replace('@s.whatsapp.net', '')}</div>
+                                 <div style={{ color: 'var(--color-text)' }} className="text-sm font-bold group-hover:text-primary transition-colors">{m.nome}</div>
+                                 <div style={{ color: 'var(--color-text-light)' }} className="text-xs">{m.telefone.replace('@s.whatsapp.net', '')}</div>
                               </div>
                            </div>
                         </td>
                         <td className="p-4">
-                           <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                             m.status === 'ativo' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                           }`}>
+                           <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${m.status === 'ativo' ? 'text-emerald-500' : 'text-red-500'}`} style={{ background: m.status === 'ativo' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
                               {m.status}
                            </span>
                         </td>
                         <td className="p-4">
                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-white">{m.qtdPassageiros}</span>
-                              <span className="text-[10px] text-slate-500 font-medium">unid.</span>
+                              <span style={{ color: 'var(--color-text)' }} className="text-sm font-bold">{m.qtdPassageiros}</span>
+                              <span style={{ color: 'var(--color-text-light)' }} className="text-[10px] font-medium">unid.</span>
                            </div>
                         </td>
                         <td className="p-4">
                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-white">R$ {(m.valorPlano || 0).toFixed(2)}</span>
+                              <span style={{ color: 'var(--color-text)' }} className="text-sm font-bold">R$ {(m.valorPlano || 0).toFixed(2)}</span>
                               <button 
                                 onClick={() => handleUpdatePrice(m.id)}
-                                className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-amber-400 transition-all"
+                                style={{ color: 'var(--color-text-light)' }}
+                                className="opacity-0 group-hover:opacity-100 p-1 hover:text-primary transition-all"
                               >
                                 <Edit2 size={12} />
                               </button>
                            </div>
                         </td>
                         <td className="p-4">
-                           <div className="text-xs text-slate-400 flex items-center gap-1 font-medium">
+                           <div style={{ color: 'var(--color-text-light)' }} className="text-xs flex items-center gap-1 font-medium">
                               <Clock size={12} /> {new Date(m.dataAtivacao).toLocaleDateString('pt-BR')}
                            </div>
                         </td>
                         <td className="p-4 text-right">
                            <div className="flex items-center justify-end gap-2">
-                              <button className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg transition-colors border border-slate-700">
+                              <button 
+                                onClick={() => navigate(`/admin/motorista/${m.id}`)}
+                                style={{ color: 'var(--color-text-light)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', cursor: 'pointer' }} 
+                                className="p-2 rounded-lg transition-colors hover:text-primary"
+                              >
                                  <ExternalLink size={16} />
                               </button>
                            </div>
@@ -338,7 +341,7 @@ const AdminDashboard = () => {
                   ))}
                   {filteredMotoristas.length === 0 && (
                     <tr>
-                      <td colSpan="7" className="p-10 text-center text-slate-500 font-medium">
+                      <td colSpan="7" style={{ color: 'var(--color-text-light)' }} className="p-10 text-center font-medium">
                         Nenhum motorista encontrado com os filtros atuais.
                       </td>
                     </tr>

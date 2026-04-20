@@ -8,10 +8,20 @@ class ApiController {
     try {
       // Mocked logics until full SQLite seed is done, but queried securely.
       const ativosCount = await Passageiro.count();
+      const mensalidades = await Financeiro.findAll({ where: { status_pagamento: 'pago' } });
+      const despesas = await require('../models/Despesa').findAll();
+
+      let receitaBruta = 0;
+      mensalidades.forEach(m => receitaBruta += m.valor_mensalidade);
+
+      let custosTotais = 0;
+      despesas.forEach(d => custosTotais += d.valor);
       
       const stats = {
-        lucroMes: 0, // Implementar query na DB Financeiro
-        inadimplentes: 0,
+        lucroMes: receitaBruta - custosTotais,
+        receitaBruta: receitaBruta,
+        custosTotais: custosTotais,
+        inadimplentes: await Financeiro.count({ where: { status_pagamento: 'atrasado' } }),
         ativos: ativosCount || 0,
         viagensHoje: 0
       };

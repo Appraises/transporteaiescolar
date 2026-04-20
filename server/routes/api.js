@@ -11,7 +11,15 @@ const adminAuth = require('../middleware/adminAuth');
 
 router.get('/dashboard/stats', ApiController.getDashboardStats);
 router.get('/alunos', AlunosController.listar);
+router.post('/alunos', AlunosController.criar);
+router.put('/alunos/:id', AlunosController.atualizar);
+
 router.get('/financeiro', FinanceiroController.listarDashboard);
+router.get('/financeiro/despesas', FinanceiroController.listarDespesas);
+router.post('/financeiro/despesas', FinanceiroController.criarDespesa);
+router.put('/financeiro/despesas/:id', FinanceiroController.atualizarDespesa);
+router.delete('/financeiro/despesas/:id', FinanceiroController.deletarDespesa);
+router.get('/financeiro/grafico', FinanceiroController.obterGrafico);
 
 router.get('/config', ConfigController.obter);
 router.post('/config', ConfigController.salvar);
@@ -28,6 +36,17 @@ router.get('/admin/motoristas/:id', adminAuth, AdminController.detalheMotorista)
 router.put('/admin/motoristas/:id/plano', adminAuth, AdminController.atualizarPlano);
 router.get('/admin/evolution/qrcode', adminAuth, AdminController.getQRCode);
 router.get('/admin/evolution/status', adminAuth, AdminController.getEvolutionStatus);
+
+// ========== ROTAS ADMIN GESTÃO DE MOTORISTA ==========
+router.get('/admin/motoristas/:id/alunos', adminAuth, AdminController.getMotoristaAlunos);
+router.post('/admin/motoristas/:id/alunos', adminAuth, AdminController.criarAluno);
+router.put('/admin/motoristas/:id/alunos/:alunoId', adminAuth, AdminController.editarAluno);
+router.delete('/admin/motoristas/:id/alunos/:alunoId', adminAuth, AdminController.deletarAluno);
+
+router.get('/admin/motoristas/:id/financeiro', adminAuth, AdminController.getMotoristaFinanceiro);
+
+router.get('/admin/motoristas/:id/config', adminAuth, AdminController.getMotoristaConfig);
+router.post('/admin/motoristas/:id/config', adminAuth, AdminController.salvarMotoristaConfig);
 
 module.exports = router;
 

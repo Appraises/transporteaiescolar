@@ -4,6 +4,10 @@ const { Op } = require('sequelize');
 const Motorista = require('../models/Motorista');
 const Assinatura = require('../models/Assinatura');
 const Passageiro = require('../models/Passageiro');
+const Financeiro = require('../models/Financeiro');
+const Config = require('../models/Config');
+const Endereco = require('../models/Endereco');
+const CronService = require('../services/CronService');
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'gestor_van_admin_secret_2026';
 
@@ -17,7 +21,7 @@ class AdminController {
     try {
       const { user, password } = req.body;
       const adminUser = process.env.ADMIN_USER || 'admin';
-      const adminPass = process.env.ADMIN_PASS || 'gestor2026';
+      const adminPass = process.env.ADMIN_PASS || 'pombas';
 
       if (user !== adminUser || password !== adminPass) {
         return res.status(401).json({ error: 'Credenciais de admin inválidas.' });
@@ -268,6 +272,189 @@ class AdminController {
         instance: instanceId,
         error: error.message
       });
+    }
+  }
+
+  // ==========================================
+  // GESTÃO DO MOTORISTA (ALUNOS, FINANCEIRO, CONFIG)
+  // ==========================================
+
+  async getMotoristaAlunos(req, res) {
+    try {
+      const { id } = req.params;
+      const alunos = await Passageiro.findAll({
+        where: { motorista_id: id },
+        order: [['nome', 'ASC']]
+      });
+      return res.status(200).json(alunos);
+    } catch (error) {
+      console.error('[AdminController] Erro getMotoristaAlunos:', error);
+      return res.status(500).json({ error: 'Erro ao buscar alunos do motorista.' });
+    }
+  }
+
+  async criarAluno(req, res) {
+    try {
+      const { id } = req.params;
+      const { nome, telefone_responsavel, turno, endereco, mensalidade } = req.body;
+      
+      const aluno = await Passageiro.create({
+        motorista_id: id,
+        nome,
+        telefone_responsavel,
+        turno: turno || 'manha',
+        mensalidade: mensalidade || 0,
+        bairro: endereco,
+        onboarding_step: 'CONCLUIDO'
+      });
+      return res.status(201).json(aluno);
+    } catch (error) {
+      console.error('[AdminController] Erro criarAluno:', error);
+      return res.status(500).json({ error: 'Erro ao criar aluno.' });
+    }
+  }
+
+  async editarAluno(req, res) {
+    try {
+      const { id, alunoId } = req.params;
+      const { nome, telefone_responsavel, turno, endereco, mensalidade } = req.body;
+
+      const aluno = await Passageiro.findOne({ where: { id: alunoId, motorista_id: id } });
+      if (!aluno) return res.status(404).json({ error: 'Aluno não encontrado' });
+
+      aluno.nome = nome || aluno.nome;
+      aluno.telefone_responsavel = telefone_responsavel || aluno.telefone_responsavel;
+      aluno.turno = turno || aluno.turno;
+      aluno.bairro = endereco !== undefined ? endereco : aluno.bairro;
+      aluno.mensalidade = mensalidade !== undefined ? mensalidade : aluno.mensalidade;
+
+      await aluno.save();
+      return res.status(200).json(aluno);
+    } catch (error) {
+      console.error('[AdminController] Erro editarAluno:', error);
+      return res.status(500).json({ error: 'Erro ao editar aluno.' });
+    }
+  }
+
+  async deletarAluno(req, res) {
+    try {
+      const { id, alunoId } = req.params;
+      const deleted = await Passageiro.destroy({ where: { id: alunoId, motorista_id: id } });
+      if (!deleted) return res.status(404).json({ error: 'Aluno não encontrado' });
+      return res.status(200).json({ message: 'Aluno removido com sucesso.' });
+    } catch (error) {
+      console.error('[AdminController] Erro deletarAluno:', error);
+      return res.status(500).json({ error: 'Erro ao remover aluno.' });
+    }
+  }
+
+  async getMotoristaFinanceiro(req, res) {
+    try {
+      const { id } = req.params;
+      // Busca todos os passageiros do motorista
+      const passageiros = await Passageiro.findAll({ where: { motorista_id: id } });
+      const pIds = passageiros.map(p => p.id);
+
+      if (pIds.length === 0) return res.status(200).json([]);
+
+      const financas = await Financeiro.findAll({ where: { passageiro_id: pIds } });
+      
+      const resultado = financas.map(fin => {
+        const pass = passageiros.find(p => p.id === fin.passageiro_id);
+        return {
+          id: fin.id,
+          nome_passageiro: pass ? pass.nome : 'Desconhecido',
+          turno: pass ? pass.turno : 'N/A',
+          valor: fin.valor_mensalidade,
+          vencimento: fin.data_vencimento,
+          status: fin.status_pagamento
+        };
+      });
+
+      return res.status(200).json(resultado);
+    } catch (error) {
+      console.error('[AdminController] Erro getMotoristaFinanceiro:', error);
+      return res.status(500).json({ error: 'Erro ao buscar financeiro do motorista.' });
+    }
+  }
+
+  async getMotoristaConfig(req, res) {
+    try {
+      const { id } = req.params;
+      const configs = await Config.findAll({
+        where: {
+          [Op.or]: [
+            { motorista_id: id },
+            { motorista_id: null } // Busca os defaults globais também
+          ]
+        }
+      });
+      
+      const formatado = {};
+      configs.forEach(c => {
+        // Se já tiver a config específica do motorista, não sobrescreve com a global (assumindo a ordem correta ou processamento aqui)
+        if (c.motorista_id === parseInt(id) || !formatado[c.chave]) {
+          formatado[c.chave] = c.valor;
+        }
+      });
+      
+      return res.status(200).json({
+        baseAddress: formatado['baseAddress'] || 'Avenida Pres, 1000 - SP',
+        schoolAddress: formatado['schoolAddress'] || '',
+        manhaParams: {
+          enquete: formatado['cron_enquete_manha'] || '05:00',
+          fechamento: formatado['cron_fechamento_manha'] || '05:55'
+        },
+        tardeParams: {
+          enquete: formatado['cron_enquete_tarde'] || '11:00',
+          fechamento: formatado['cron_fechamento_tarde'] || '11:55'
+        },
+        noiteParams: {
+          enquete: formatado['cron_enquete_noite'] || '17:00',
+          fechamento: formatado['cron_fechamento_noite'] || '17:55'
+        }
+      });
+    } catch (error) {
+      console.error('[AdminController] Erro getMotoristaConfig:', error);
+      return res.status(500).json({ error: 'Erro config do motorista' });
+    }
+  }
+
+  async salvarMotoristaConfig(req, res) {
+    try {
+      const { id } = req.params;
+      const { baseAddress, schoolAddress, manhaParams, tardeParams, noiteParams } = req.body;
+      
+      const upsert = async (chave, valor) => {
+        let conf = await Config.findOne({ where: { chave, motorista_id: id } });
+        if (conf) { 
+          conf.valor = valor; 
+          await conf.save(); 
+        } else { 
+          await Config.create({ chave, valor, motorista_id: id }); 
+        }
+      };
+
+      await upsert('baseAddress', baseAddress);
+      await upsert('schoolAddress', schoolAddress);
+      
+      await upsert('cron_enquete_manha', manhaParams.enquete);
+      await upsert('cron_fechamento_manha', manhaParams.fechamento);
+      
+      await upsert('cron_enquete_tarde', tardeParams.enquete);
+      await upsert('cron_fechamento_tarde', tardeParams.fechamento);
+
+      await upsert('cron_enquete_noite', noiteParams.enquete);
+      await upsert('cron_fechamento_noite', noiteParams.fechamento);
+
+      // Idealmente, recarregar os cron jobs passando o motorista_id para o CronService.
+      // O CronService teria que ser atualizado depois para ter escopo por motorista.
+      await CronService.startCronJobs();
+
+      return res.status(200).json({ status: 'ok' });
+    } catch (error) {
+      console.error('[AdminController] Erro salvarMotoristaConfig:', error);
+      return res.status(500).json({ error: 'Falha ao salvar config do motorista' });
     }
   }
 }

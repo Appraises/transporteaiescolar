@@ -31,80 +31,60 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f172a] p-4 font-sans">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-amber-400/10 rounded-full blur-[120px]"></div>
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
-      </div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-background)' }}>
+      <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '40px 32px' }}>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
+          <div style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))', padding: '16px', borderRadius: '50%', marginBottom: '16px', boxShadow: 'var(--shadow-glow)' }}>
+            <Shield size={32} color="white" />
+          </div>
+          <h1 style={{ fontSize: '24px', color: 'var(--color-text)' }}>Master Admin</h1>
+          <p style={{ color: 'var(--color-text-light)', marginTop: '8px' }}>Gestor Van SaaS Platform</p>
+        </div>
 
-      <div className="relative w-full max-w-md">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-10 shadow-2xl">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20 mb-4 transform -rotate-6">
-              <Shield size={32} className="text-slate-900" />
-            </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">Master Admin</h1>
-            <p className="text-slate-400 text-sm mt-1">Gestor Van SaaS Platform</p>
+          {error && <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--color-error)', color: 'var(--color-error)', borderRadius: '4px', fontSize: '14px', textAlign: 'center' }}>{error}</div>}
+
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: 'var(--color-text)' }}>Usuário</label>
+            <input 
+              type="text" 
+              className="search-input" 
+              value={user}
+              onChange={(e) => setUser(e.target.value)}
+              placeholder="admin" 
+              required
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm text-center">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-300 ml-1">Usuário</label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  value={user}
-                  onChange={(e) => setUser(e.target.value)}
-                  className="w-100 bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 outline-none focus:border-amber-400/50 focus:ring-4 focus:ring-amber-400/10 transition-all"
-                  placeholder="admin"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-300 ml-1">Senha de Acesso</label>
-              <div className="relative">
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-100 bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 outline-none focus:border-amber-400/50 focus:ring-4 focus:ring-amber-400/10 transition-all"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-100 bg-amber-400 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 font-bold py-4 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 group"
-            >
-              {loading ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : (
-                <>
-                  Acessar Central <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-8 pt-8 border-t border-slate-800 text-center">
-            <p className="text-slate-500 text-xs">
-              Área restrita para administração do sistema.<br />
-              IP registrado para fins de auditoria.
-            </p>
+          <div>
+             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: 'var(--color-text)' }}>Senha de Acesso</label>
+            <input 
+              type="password" 
+              className="search-input" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••" 
+              required
+            />
           </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="btn-primary" 
+            style={{ justifyContent: 'center', marginTop: '8px', padding: '12px', opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <><ArrowRight size={18} /> Acessar Central</>}
+          </button>
+        </form>
+
+        <div style={{ marginTop: '32px', paddingTop: '32px', borderTop: '1px solid var(--color-border)', textAlign: 'center' }}>
+          <p style={{ color: 'var(--color-text-light)', fontSize: '12px' }}>
+            Área restrita para administração do sistema.<br />
+            IP registrado para fins de auditoria.
+          </p>
         </div>
       </div>
     </div>

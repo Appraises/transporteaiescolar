@@ -12,6 +12,7 @@ class ConfigController {
       // Defaults se vier vazio
       res.status(200).json({
         baseAddress: formatado['baseAddress'] || 'Avenida Pres, 1000 - SP',
+        schoolAddress: formatado['schoolAddress'] || '',
         manhaParams: {
           enquete: formatado['cron_enquete_manha'] || '05:00',
           fechamento: formatado['cron_fechamento_manha'] || '05:55'
@@ -33,7 +34,7 @@ class ConfigController {
 
   async salvar(req, res) {
     try {
-      const { baseAddress, manhaParams, tardeParams, noiteParams } = req.body;
+      const { baseAddress, schoolAddress, manhaParams, tardeParams, noiteParams } = req.body;
       
       const upsert = async (chave, valor) => {
         let conf = await Config.findOne({ where: { chave } });
@@ -42,6 +43,7 @@ class ConfigController {
       };
 
       await upsert('baseAddress', baseAddress);
+      await upsert('schoolAddress', schoolAddress);
       
       await upsert('cron_enquete_manha', manhaParams.enquete);
       await upsert('cron_fechamento_manha', manhaParams.fechamento);
