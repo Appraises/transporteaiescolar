@@ -326,51 +326,6 @@ class LlmService {
   }
 
   /**
-   * Extrai dados estruturados para cadastro de um aluno a partir de texto natural.
-   */
-  async extractStudentData(rawText) {
-    if (!process.env.GEMINI_API_KEY) {
-       return { nome: null, turno: 'manha', mensalidade: 0, bairro: null };
-    }
-
-    const prompt = `
-      Você é um assistente de secretaria para uma van escolar. O motorista quer cadastrar um novo aluno e enviou esta frase:
-      "${rawText}"
-
-      Tente extrair o máximo de informações possíveis:
-      - Nome do aluno
-      - Turno (manha, tarde ou noite)
-      - Valor da mensalidade (apenas o número)
-      - Bairro ou Endereço básico
-
-      Retorne EXATAMENTE APENAS um JSON válido (sem markdown):
-      {
-        "nome": "Nome Completo ou null",
-        "turno": "manha | tarde | noite",
-        "mensalidade": <numero_float_ou_0>,
-        "bairro": "Nome do Bairro ou null",
-        "telefone_responsavel": "Número se houver ou null"
-      }
-    `;
-
-    try {
-      const response = await GeminiQueueService.enqueue(() => 
-        this.ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: prompt,
-        })
-      );
-
-      const textOutput = response.text;
-      const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
-      return JSON.parse(cleanJsonStr);
-    } catch (error) {
-      console.error('[LlmService] Falha ao extrair dados do aluno:', error);
-      return { nome: null, turno: 'manha', mensalidade: 0, bairro: null };
-    }
-  }
-
-  /**
    * Retorna a mensagem de onboarding (Guia de Comandos) para o Motorista.
    */
   getDriverOnboardingMessage(motoristaNome = 'Motorista') {
