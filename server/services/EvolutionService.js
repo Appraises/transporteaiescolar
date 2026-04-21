@@ -1,13 +1,54 @@
 const axios = require('axios');
 
-// Dicionário Sintático de Substituições em tempo-real (Humanização Lexical)
+// Dicionário Sintático de Substituições em tempo-real (Humanização Lexical e Anti-SPAM Meta)
 const SYNONYMS = {
-    'Olá': ['Oi', 'Fala aí', 'Opa', 'Tudo bem?', 'E aí', 'Fala', 'Como vai?'],
-    'Tudo bem?': ['Tudo joia?', 'Tudo certo?', 'Como você está?', 'Como vão as coisas?'],
-    'atrasado': ['pendente', 'em haver', 'aberto', 'vencido'],
-    'comprovante': ['recibo', 'foto do deposito', 'comprovante do pix'],
-    'Valeu': ['Obrigado', 'Agradeço', 'Muito obrigado', 'Um abraço', 'Tamo junto'],
-    'hoje': ['no dia de hoje', 'nesta data', 'agora mesmo', 'hoje mesmo']
+    // Saudações e Cumprimentos
+    'Olá': ['Oi', 'Fala aí', 'Opa', 'Saudações', 'E aí', 'Fala'],
+    'olá': ['oi', 'fala aí', 'opa', 'e aí'],
+    'Tudo bem?': ['Tudo joia?', 'Tudo certo?', 'Tudo em paz?', 'Como vão as coisas?'],
+    'tudo bem?': ['tudo joia?', 'tudo certo?', 'tudo na paz?'],
+    'Valeu': ['Obrigado', 'Agradeço', 'Muito obrigado', 'Um abraço', 'Tamo junto', 'Valeu demais'],
+    'valeu': ['obrigado', 'agradeço', 'um abraço', 'tamo junto'],
+    
+    // Status e Confirmações
+    'Entendido': ['Anotado', 'Compreendido', 'Registrado', 'Copiado'],
+    'entendido': ['anotado', 'compreendido', 'registrado', 'copiado'],
+    'Anotado': ['Registrado', 'Salvo no sistema', 'Marcado'],
+    'anotado': ['registrado', 'salvo', 'marcado'],
+    'Feito': ['Prontinho', 'Concluído', 'Resolvido', 'Pronto'],
+    'feito': ['prontinho', 'concluído', 'resolvido'],
+    'Beleza': ['Maravilha', 'Perfeito', 'Ótimo', 'Show'],
+    'beleza': ['maravilha', 'perfeito', 'ótimo', 'show'],
+    'Tudo certo': ['Tudo OK', 'Tudo pronto', 'Maravilha'],
+    'tudo certo': ['tudo ok', 'tudo pronto', 'maravilha'],
+
+    // Termos Financeiros (Gênero garantido)
+    'mensalidade': ['fatura', 'parcela', 'cobrança', 'assinatura'], // Femininos pra "a mensalidade" funcionar
+    'Mensalidade': ['Fatura', 'Parcela', 'Cobrança', 'Assinatura'],
+    'comprovante': ['recibo', 'documento', 'comprovante do pix'], // Masculinos pra "o comprovante" funcionar
+    'Comprovante': ['Recibo', 'Documento'],
+    'atrasado': ['pendente', 'vencido'], // "está atrasado" -> "está pendente"
+    'Pix': ['pagamento', 'PIX', 'depósito'], // "o Pix" -> "o pagamento"
+    'PIX': ['PAGAMENTO', 'DEPÓSITO'],
+    
+    // Termos de Logística e Lugares
+    'garagem': ['base', 'residência', 'casa'], // Femininos pra "a garagem"
+    'Garagem': ['Base', 'Residência', 'Casa'],
+    'escola': ['instituição', 'faculdade'], // Femininos pra "na escola"
+    'Escola': ['Instituição', 'Faculdade'],
+    
+    // Entidades e Pessoas
+    'robô': ['assistente', 'sistema', 'bot', 'software'], // Masculinos pra "o robô"
+    'Robô': ['Assistente', 'Sistema', 'Bot', 'Software'],
+    'chefe': ['amigo', 'parceiro', 'mestre', 'campeão', 'comandante'], // Masculinos
+    'Chefe': ['Amigo', 'Parceiro', 'Mestre', 'Campeão', 'Comandante'],
+    'passageiro': ['aluno', 'cliente', 'estudante'],
+    'passageiros': ['alunos', 'clientes', 'estudantes'],
+    'Passageiros': ['Alunos', 'Clientes', 'Estudantes'],
+    
+    // Advérbios 
+    'hoje': ['no dia de hoje', 'nesta data', 'agora mesmo', 'hoje mesmo'],
+    'agora': ['já', 'nesse momento', 'imediatamente']
 };
 const EMOJI_VARIATIONS = ['🚐', '🚗', '📚', '✌️', '👍', '👊', '✅', '✔'];
 const ZERO_WIDTH_SPACE = '\u200B';
