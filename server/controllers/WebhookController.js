@@ -1014,7 +1014,31 @@ class WebhookController {
 
          console.log(`[Group Participants] Evento "${action}" no grupo ${remoteJid}, author: ${author}, participants: ${JSON.stringify(participants)}`);
 
-         if (action !== 'add' || !author || !remoteJid) {
+         if (!remoteJid) return;
+
+         // Se o bot foi REMOVIDO do grupo, limpa do banco de dados
+         if (action === 'remove') {
+            const botPhone = process.env.BOT_PHONE_NUMBER || '5511999999999';
+            const botJid = botPhone + '@s.whatsapp.net';
+            // Checa se o bot esta na lista de participantes removidos
+            const botRemoved = participants.some(p => {
+               const normalized = normalizePhone(p);
+               return normalized === botJid || p.includes(botPhone);
+            });
+
+            if (botRemoved) {
+               const grupoRemovido = await GrupoMotorista.findOne({ where: { group_jid: remoteJid } });
+               if (grupoRemovido) {
+                  await grupoRemovido.destroy();
+                  console.log('[Group Participants] Bot removido do grupo ' + remoteJid + '. Registro deletado do banco.');
+               } else {
+                  console.log('[Group Participants] Bot removido do grupo ' + remoteJid + ', mas nao estava no banco.');
+               }
+            }
+            return;
+         }
+
+         if (action !== 'add' || !author) {
             return;
          }
 
