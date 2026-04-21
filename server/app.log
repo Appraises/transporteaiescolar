@@ -1,0 +1,15 @@
+[SISTEMA] Log iniciado em 20/04/2026, 16:26:41
+16:26:46 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+16:26:46 [LOG] [CronService] Carregando Agendamentos...
+16:26:46 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+16:26:46 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+16:26:46 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+16:26:46 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+16:26:46 [LOG] [Servidor] Em execução na porta 3000
+16:26:47 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+16:26:47 [LOG] [CronService] Carregando Agendamentos...
+16:26:47 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+16:26:47 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+16:26:47 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+16:26:47 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+16:26:47 [LOG] [Servidor] Em execução na porta 3000

@@ -208,6 +208,79 @@ const trackingSchoolArrival = [
     (escolaNome) => `📢 Ei, turma! A van já tá quase na ${escolaNome}! Quem votou volta, bora pro ponto de embarque! 🎒`
 ];
 
+// ─── Onboarding Gradual do Motorista ────────────────────────
+
+const askCapacityMessages = [
+    (nome) => `Muito prazer, ${nome}! Entendido.\n\nPara começarmos as configurações, **qual é a capacidade de passageiros da sua van?**\n(Ex: Levo 15 pessoas de manhã e 10 à tarde)`,
+    (nome) => `Seja muito bem-vindo, ${nome}! Vamos lá.\n\nPode me dizer, em áudio ou texto: **quantos lugares tem a sua van em cada turno?**\n(Ex: 20 de manhã, 10 à tarde)`,
+    (nome) => `Fechado, ${nome}! Prazerzão.\n\nPra eu já configurar seu painel com inteligência, **qual é a lotação máxima de alunos que você carrega?**`,
+    (nome) => `E aí, ${nome}! É ótimo ter você no time. 👏\n\nMe fala uma coisa: **quantos passageiros a sua van comporta?** (Pode mandar em áudio, tipo "Levo 15 de manhã e 8 à tarde")`,
+    (nome) => `Valeu, ${nome}! Tudo certo.\n\nAgora um detalhe importante: **qual a capacidade da sua van por turno?** Me manda os números aí pra eu registrar!`,
+    (nome) => `Show, ${nome}! Vamos pro próximo passo.\n\nDiz aí, **quantas crianças a sua van carrega** em média na ida e na volta?`
+];
+
+const askGarageMessages = [
+    () => `Anotado! Lotação já salva no sistema. ✅\n\nAgora me diz, **qual é o endereço da sua garagem** ou do lugar onde você estaciona e começa sua rota diariamente?\n(Ex: Rua das Flores, 123, Bairro)`,
+    () => `Beleza! Capacidade registrada na nossa caderneta virtual. 🚐\n\nO próximo passo: **de onde você sai todo dia?** Manda o endereço da sua garagem pra eu usar de ponto de partida no Google Maps!`,
+    () => `Entendido! Vagas computadas.\n\nQual é o **endereço da base (garagem)** de onde a sua van sempre despacha de manhãzinha?`,
+    () => `Lotação configurada! 📋\n\nPra eu calcular as rotas, **de qual endereço você sempre parte?** Manda a rua e o número da sua garagem!`,
+    () => `Feito! Anotei a lotação máxima. ☑️\n\nAgora, manda pra cá: **qual é o endereço da sua casa ou garagem**, de onde a van começa o trajeto? (Rua, Número, Bairro)`,
+    () => `Beleza pura! Vagas registradas. 🚀\n\nPreciso de mais uma coisinha: **onde é o seu ponto inicial de partida?** (O endereço da sua base)`
+];
+
+const askSchoolMessages = [
+    () => `Base salva nas coordenadas detectadas! 📍\n\nPor último, **qual é o endereço da principal escola ou universidade** que você dirige os alunos?\n(Pode dizer o nome e a cidade)`,
+    () => `Garagem encontrada e salva no mapa! 🗺️\n\nO último detalhe pra fecharmos o ciclo: **qual o endereço da escola/faculdade** pra onde você faz o transporte?`,
+    () => `Feito! Ponto de partida registrado. ✅\n\nAgora manda pra cá o **endereço do destino principal (escola)** da sua galera!`,
+    () => `Mapa atualizado com a sua base! 📍\n\nPara encerrar: **qual é o destino final?** Manda o nome ou o endereço certinho da escola!`,
+    () => `Local de partida confirmado! 🏠\n\nÚltima pergunta: **pra onde estamos indo?** Manda aí o nome ou endereço da escola/faculdade principal!`,
+    () => `Tudo certo com a garagem! 👍\n\nPra gente finalizar o seu perfil, me fala: **qual é o endereço da escola ou instituição** pra qual a maioria da turma vai?`
+];
+
+const errCapacityMessages = [
+    () => `🧐 Não entendi muito bem. Pode me dizer apenas os números da capacidade de alunos por turno? (Ex: 15 de manhã)`,
+    () => `🤔 Fiquei confuso com os números. Tem como mandar em texto direto? (Ex: "20 na ida e 20 na volta")`,
+    () => `⚠️ Oops, não captei a matemática. Manda só os totais de capacidade pra eu gravar aqui!`,
+    () => `😅 Tive um pequeno branco aqui. Você pode reescrever a quantidade de vagas da van?`,
+    () => `🤖 Minha inteligência falhou só um pouquinho agora. Pode me mandar no formato "15 de manhã e 10 à tarde"?`,
+    () => `🤔 Não peguei o número exato, chefe. Me manda de novo a lotação da van?`
+];
+
+const errAddressMessages = [
+    (tipo) => `⚠️ Não achei esse endereço da ${tipo} no mapa. Tenta mandar algo mais completo, por favor.`,
+    (tipo) => `🤔 Meu GPS não conseguiu achar essa localização para a ${tipo}. Pode colocar Rua, Número e Bairro?`,
+    (tipo) => `📍 Ops, o Google Maps não validou o endereço da ${tipo}. Tenta mandar mais focado no endereço físico mesmo!`,
+    (tipo) => `🗺️ Eita, deu erro buscando a ${tipo}. Você consegue mandar o endereço completo com cidade, por favor?`,
+    (tipo) => `⚠️ Meu robô de mapas se perdeu tentando achar a ${tipo}. Escreve a rua certinha e o bairro pra eu tentar de novo!`,
+    (tipo) => `🧭 Não encontrei as coordenadas da ${tipo}! Tenta formular o endereço igual aparece em correspondência!`
+];
+
+// ─── Vendas (Botão do Pitch + Pagamento Lead) ────────────────────────
+
+const salesPitchMessages = [
+    (valor) => `👋 *Olá! Sou o assistente de IA para Van Escolar.* 🚐💨\n\nVocê sabia que pode automatizar toda a sua logística e ainda passar mais segurança para os pais?\n\n*O que eu faço por você:*\n✅ Enquetes automáticas de presença todo dia.\n✅ Rastreamento GPS em tempo real para os pais.\n✅ Gestão completa de mensalidades e recibos.\n✅ Notificações inteligentes de chegada na escola.\n\n🚀 *Quer profissionalizar sua van por apenas R$ ${valor.toFixed(2)}/mês?*\n\nResponda *QUERO ASSINAR* para receber as instruções de pagamento!`,
+    (valor) => `🚐 Olá! Sou o robô inteligente feito para motoristas de Van Escolar!\n\nSeu trabalho pode ficar muito mais simples:\n☑️ Enquetes de ida e volta sem precisar mandar bom dia.\n☑️ Avisos aos passageiros quando a van estiver perto de casa.\n☑️ Organização financeira automática de boletos e despesas.\n\nTudo isso sai por apenas *R$ ${valor.toFixed(2)} por mês*!\n\nInteressado em modernizar sua rotina? Mande *QUERO ASSINAR* aqui no chat!`,
+    (valor) => `Oi! Boas-vindas! 🤖👋 Eu sou a Inteligência Artificial das Vans Escolares.\n\nEu posso te ajudar com muitas coisas:\n- Saber quem vai embarcar antes de sair de casa (enquetes)\n- Mostrar o trajeto pelo GPS para evitar ligações indesejadas\n- Conferir recibos de Pix do pessoal automaticamente\n\nIsso tudo pelo valor mensal de apenas *R$ ${valor.toFixed(2)}*.\n\nTopa melhorar sua van? Digite *QUERO ASSINAR* para começarmos!`
+];
+
+const salesPaymentMessages = [
+    (valor, tipo, chave) => `🎉 *Excelente escolha! Você está a um passo de modernizar sua van.*\n\nPara ativar o seu acesso, realize o pagamento da primeira mensalidade:\n\n💰 *Valor:* R$ ${valor.toFixed(2)}\n🔑 *Chave PIX (${tipo}):* ${chave}\n\n📸 Após realizar o pagamento, **mande a foto ou PDF do comprovante aqui mesmo**.\n\nNossa inteligência artificial vai validar o seu pagamento em segundos e já liberar o seu bot!`,
+    (valor, tipo, chave) => `Vamos nessa! 🚀\n\nPara destravar todas as minhas funcionalidades pro seu painel, você só precisa fazer o PIX de adesão:\n\n💳 *Valor a pagar:* R$ ${valor.toFixed(2)}\n🔑 *Identificação PIX (${tipo}):* ${chave}\n\nManda a foto/print do comprovante por aqui assim que terminar!\nEu reconheço o pagamento sozinho e te dou acesso imediato.`,
+    (valor, tipo, chave) => `Ótimo! Sua vida vai ficar muito mais fácil. 😎\n\nPor favor, faça o PIX do primeiro mês de uso:\n\n💵 *Mensalidade:* R$ ${valor.toFixed(2)}\n🔑 *Chave PIX (${tipo}):* ${chave}\n\nTerminou? Envia a imagem do seu comprovante direto nesse chat. Meu sistema de visão artificial já confere e ativa sua assinatura em poucos segundos!`
+];
+
+const salesSuccessMessages = [
+    () => `✅ *PAGAMENTO CONFIRMADO!* 🎉\n\nParabéns! Sua assinatura está ativa.\nVamos fazer algumas perguntas rápidas para completarmos o seu perfil e sua configuração logística.\n\n*(DICA: Se achar mais fácil, você pode responder todas essas perguntas por áudio!)* 🎙️\n\nPara começarmos, **qual o seu nome completo (ou nome da sua Van)?**`,
+    () => `✅ *DEU CERTO! SEU PIX FOI VALIDADO!* 🎉\n\nSua inscrição tá confirmadíssima!\nAgora precisamos ajeitar as coisas pra você começar a usar o robô na rua.\n\n_Pode responder todas essas minhas próximas perguntas enviando áudio no microfone se preferir!_ 🎙️\n\nPara a gente iniciar, **qual o seu nome completo ou como você é conhecido?**`,
+    () => `✅ *COMPROVANTE VERIFICADO COM SUCESSO!* 🚀\n\nVocê agora é um assinante oficial! Próximo passo: montar o seu perfil.\n\n_(Nota: Se você for de poucas palavras, manda um áudio pra mim a partir de agora que eu entendo igual!)_ 🎙️\n\nPra eu saber com quem tô falando direitinho, **qual é o seu nome?**`
+];
+
+const salesErrorMessages = [
+    (valorEsperado) => `⚠️ Hmmm, não consegui validar esse comprovante. Verifique se a foto está nítida e se o valor bate (R$ ${valorEsperado.toFixed(2)}). Tente mandar a imagem novamente!`,
+    (valorEsperado) => `🧐 Tive um problema ao ler esse documento. O valor exato é R$ ${valorEsperado.toFixed(2)}. Veja se está tudo certo e mande o PDF ou print de novo!`,
+    (valorEsperado) => `❌ Ops, meu leitor de comprovantes não confirmou esse Pix. Confirma pra mim se tá tudo certo com o valor de R$ ${valorEsperado.toFixed(2)} e joga a imagem aqui outra vez.`
+];
+
 module.exports = {
     pick,
     financeiro: {
@@ -242,5 +315,18 @@ module.exports = {
         rotaFinalizada: (trecho, qtd) => pick(trackingRouteFinished)(trecho, qtd),
         raioAlterado: (km) => pick(trackingRadiusChanged)(km),
         vanChegandoEscola: (escolaNome) => pick(trackingSchoolArrival)(escolaNome)
+    },
+    onboardingMotorista: {
+        perguntaLotacao: (nome) => pick(askCapacityMessages)(nome),
+        perguntaGaragem: () => pick(askGarageMessages)(),
+        perguntaEscola: () => pick(askSchoolMessages)(),
+        erroLotacao: () => pick(errCapacityMessages)(),
+        erroEndereco: (tipo) => pick(errAddressMessages)(tipo)
+    },
+    vendasMotorista: {
+        pitch: (valor) => pick(salesPitchMessages)(valor),
+        instrucoesPagamento: (valor, tipo, chave) => pick(salesPaymentMessages)(valor, tipo, chave),
+        sucessoPagamento: () => pick(salesSuccessMessages)(),
+        erroRecibo: (valorEsperado) => pick(salesErrorMessages)(valorEsperado)
     }
 };

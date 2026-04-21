@@ -1,4 +1,4 @@
-﻿const WebhookQueueService = require('../services/WebhookQueueService');
+const WebhookQueueService = require('../services/WebhookQueueService');
 const ReceiptParserService = require('../services/ReceiptParserService');
 const EvolutionService = require('../services/EvolutionService');
 const Passageiro = require('../models/Passageiro');
@@ -222,22 +222,85 @@ class WebhookController {
                }
             }
 
-            // D. ETAPA: AGUARDANDO_NOME (FinalizaÃ§Ã£o do cadastro)
+            // D. ETAPA: AGUARDANDO_NOME (Coleta do nome e pergunta da lotação)
             if (m.venda_etapa === 'AGUARDANDO_NOME' && textMessage.trim().length > 3) {
                m.nome = textMessage.trim();
-               m.status = 'ativo';
-               m.venda_etapa = 'CONCLUIDO';
-               m.boas_vindas_enviada = true;
+               m.venda_etapa = 'AGUARDANDO_LOTACAO';
                await m.save();
 
-               // Envia the Oficial Tutorial
-               await EvolutionService.sendMessage(remoteJid, LlmService.getDriverOnboardingMessage(m.nome));
-               console.log(`[Vendas] CONVERSÃƒO COMPLETA! Novo motorista: ${m.nome}`);
+               await EvolutionService.sendMessage(remoteJid, MessageVariation.onboardingMotorista.perguntaLotacao(m.nome));
                return;
             }
 
-            // Se for conversa genÃ©rica de lead, ignora ou manda pitch de novo se for muito tempo
-            return; 
+            // E. ETAPA: AGUARDANDO_LOTACAO
+            if (m.venda_etapa === 'AGUARDANDO_LOTACAO') {
+               const capacidade = await LlmService.parseDriverCapacity(textMessage);
+               if (capacidade && capacidade.isCapacity) {
+                  m.meta_manha = capacidade.manha || 0;
+                  m.meta_tarde = capacidade.tarde || 0;
+                  m.meta_noite = capacidade.noite || 0;
+                  m.venda_etapa = 'AGUARDANDO_GARAGEM';
+                  await m.save();
+                  
+                  await EvolutionService.sendMessage(remoteJid, MessageVariation.onboardingMotorista.perguntaGaragem());
+                  return;
+               } else {
+                  await EvolutionService.sendMessage(remoteJid, MessageVariation.onboardingMotorista.erroLotacao());
+                  return;
+               }
+            }
+
+            // F. ETAPA: AGUARDANDO_GARAGEM
+            if (m.venda_etapa === 'AGUARDANDO_GARAGEM') {
+               const GeocodeService = require('../services/GeocodeService');
+               const coords = await GeocodeService.getCoordinates(textMessage);
+               
+               if (coords) {
+                  m.latitude = coords.lat;
+                  m.longitude = coords.lng;
+                  m.venda_etapa = 'AGUARDANDO_ESCOLA';
+                  await m.save();
+                  
+                  await EvolutionService.sendMessage(remoteJid, MessageVariation.onboardingMotorista.perguntaEscola());
+                  return;
+               } else {
+                  await EvolutionService.sendMessage(remoteJid, MessageVariation.onboardingMotorista.erroEndereco('garagem'));
+                  return;
+               }
+            }
+
+            // G. ETAPA: AGUARDANDO_ESCOLA
+            if (m.venda_etapa === 'AGUARDANDO_ESCOLA') {
+               const GeocodeService = require('../services/GeocodeService');
+               const coords = await GeocodeService.getCoordinates(textMessage);
+               
+               if (coords) {
+                  m.escola_nome = textMessage.split(',')[0].trim() || textMessage;
+                  m.escola_latitude = coords.lat;
+                  m.escola_longitude = coords.lng;
+                  
+                  // Finaliza o onboarding
+                  m.status = 'ativo';
+                  m.venda_etapa = 'CONCLUIDO';
+                  m.boas_vindas_enviada = true;
+                  await m.save();
+                  
+                  await EvolutionService.sendMessage(remoteJid, LlmService.getDriverOnboardingMessage(m.nome));
+                  
+                  // Manda as mensagens de tutorial e dicas
+                  await EvolutionService.sendMessage(remoteJid, "Vou te enviar aqui embaixo também um breve tutorial com o resumo das minhas funções para você deixar salvo. 👇");
+                  await EvolutionService.sendMessage(remoteJid, LlmService.getDriverTutorialMessage());
+                  
+                  console.log(`[Vendas] ONBOARDING COMPLETO! Novo motorista: ${m.nome}`);
+                  return;
+               } else {
+                  await EvolutionService.sendMessage(remoteJid, MessageVariation.onboardingMotorista.erroEndereco('escola'));
+                  return;
+               }
+            }
+
+            // Se for conversa genérica de lead, ignora ou manda pitch de novo se for muito tempo
+            return;
          }
       }
 
