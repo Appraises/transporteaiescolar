@@ -46,6 +46,7 @@ class WebhookController {
          const validEvents = [
             'messages.upsert', 'MESSAGES_UPSERT',
             'messages.create', 'MESSAGES_CREATE',
+            'messages.update', 'MESSAGES_UPDATE',
             'group-participants.update', 'GROUP_PARTICIPANTS_UPDATE',
             'groups.upsert', 'GROUPS_UPSERT'
          ];
@@ -53,6 +54,18 @@ class WebhookController {
          console.log(`[Webhook] Evento recebido: ${event}`);
 
          if (!validEvents.includes(event)) {
+            return;
+         }
+
+         // ====== TRATAMENTO DE GROUPS.UPSERT (Bot adicionado a um grupo novo) ======
+         if (event === 'groups.upsert' || event === 'GROUPS_UPSERT') {
+            await this._handleGroupsUpsert(body.data);
+            return;
+         }
+
+         // ====== TRATAMENTO DE GROUP-PARTICIPANTS.UPDATE ======
+         if (event === 'group-participants.update' || event === 'GROUP_PARTICIPANTS_UPDATE') {
+            await this._handleGroupParticipantsUpdate(body.data);
             return;
          }
 
@@ -856,50 +869,167 @@ class WebhookController {
                   console.log(`[Webhook] Voto registrado: ${passageiroVotante.nome} -> ida=${statusIda}, volta=${statusVolta} (Viagem #${viagem.id})`);
 
                } else {
-                  console.log(`[Webhook] Outro tipo de Message Update recebido. Ignorando...`);
+                  console.log('[Webhook] Outro tipo de Message Update recebido. Ignorando...');
                }
             } catch (e) {
                console.warn('[Webhook] Falha ao ler PollUpdate', e.message);
             }
          }
 
-         // 4. InterceptaÃ§Ã£o de Grupo Multi-Tenant Add
-         if (event === 'group-participants.update') {
-            const groupData = body.data;
-            if (!groupData) return;
+      } catch (error) {
+         console.error('[Webhook] Erro critico no processamento do webhook:', error);
+      }
+   }
 
-            const { id: remoteJid, author, action, participants } = groupData;
+   /**
+    * Trata o evento groups.upsert da Evolution API v2.
+    * Esse evento dispara quando o bot é adicionado a um grupo novo.
+    * O payload contém os metadados do grupo: id, subject, participants[], subjectOwner, subjectOwnerPn, etc.
+    */
+   _handleGroupsUpsert = async (data) => {
+      try {
+         // data pode ser um objeto ou um array de grupos
+         const groups = Array.isArray(data) ? data : [data];
 
-            // Detect se ocorreu aÃ§Ã£o de Add
-            if (action === 'add' && author) {
-               console.log(`[Group Validation] Evento Add detectado no grupo ${remoteJid} pelo author ${author}`);
+         for (const groupInfo of groups) {
+            if (!groupInfo || !groupInfo.id) {
+               console.log('[Groups.Upsert] Payload sem ID de grupo, ignorando.');
+               continue;
+            }
 
-               // Checa se o usuÃ¡rio que disparou isso Ã© nosso motorista pagante ativo
-               const motorista = await Motorista.findOne({ where: { telefone: author, status: 'ativo' } });
+            const groupJid = groupInfo.id;
+            const groupName = groupInfo.subject || 'Grupo sem nome';
 
-               if (motorista) {
-                  // Valida se o grupo jÃ¡ tÃ¡ rastreado, senÃ£o cria e avisa!
-                  const [grupo, created] = await GrupoMotorista.findOrCreate({
-                     where: { group_jid: remoteJid },
-                     defaults: { motorista_id: motorista.id, group_jid: remoteJid }
-                  });
-                  if (created) {
-                     const botPhone = process.env.BOT_PHONE_NUMBER || '5511999999999';
-                     const linkMagico = `https://wa.me/${botPhone}?text=VAN%20${motorista.id}`;
-                     EvolutionService.sendMessage(remoteJid, `ðŸš™ *OlÃ¡ pessoal! Sou o assistente virtual da Van do(a) ${motorista.nome}.*\n\nPara organizarmos as rotas diÃ¡rias com inteligÃªncia artificial, cliquem no link abaixo para iniciar o cadastro no meu privado:\n\nðŸ‘‰ ${linkMagico}\n\nLÃ¡ irei pedir Nome, Turno e EndereÃ§os rapidinho!`);
-                  }
+            console.log(`[Groups.Upsert] Bot adicionado ao grupo "${groupName}" (${groupJid})`);
+
+            // Identifica quem criou/adicionou o bot ao grupo.
+            // Na v2, o campo subjectOwnerPn contém o telefone real (JID padrão)
+            // e subjectOwner pode ser um LID. Também podemos olhar participants[].
+            let authorPhone = groupInfo.subjectOwnerPn || groupInfo.subjectOwner || null;
+
+            // Se não veio nos campos de subject, tenta achar nos participantes
+            // (o admin do grupo geralmente é o primeiro participante com role 'superadmin' ou 'admin')
+            if ((!authorPhone || authorPhone.endsWith('@lid')) && Array.isArray(groupInfo.participants)) {
+               const admin = groupInfo.participants.find(p => p.admin === 'superadmin' || p.admin === 'admin');
+               if (admin) {
+                  // Usa o JID padrão se disponível
+                  authorPhone = admin.pn || admin.id || authorPhone;
+               }
+            }
+
+            if (!authorPhone) {
+               console.log(`[Groups.Upsert] Não foi possível identificar o dono do grupo ${groupJid}. Ignorando.`);
+               continue;
+            }
+
+            console.log(`[Groups.Upsert] Dono/criador identificado: ${authorPhone}`);
+
+            // Normaliza o telefone para buscar no banco
+            const normalizedAuthor = normalizePhone(authorPhone);
+
+            // Verifica se é um motorista pagante ativo
+            const motorista = await Motorista.findOne({ where: { telefone: normalizedAuthor, status: 'ativo' } });
+
+            if (motorista) {
+               // Vincula o grupo ao motorista
+               const [grupo, created] = await GrupoMotorista.findOrCreate({
+                  where: { group_jid: groupJid },
+                  defaults: { motorista_id: motorista.id, group_jid: groupJid, nome_grupo: groupName }
+               });
+
+               if (created) {
+                  console.log(`[Groups.Upsert] ✅ Grupo "${groupName}" vinculado ao motorista ${motorista.nome} (ID ${motorista.id})`);
+                  const botPhone = process.env.BOT_PHONE_NUMBER || '5511999999999';
+                  const linkMagico = `https://wa.me/${botPhone}?text=VAN%20${motorista.id}`;
+                  await EvolutionService.sendMessage(groupJid, `🚙 *Olá pessoal! Sou o assistente virtual da Van do(a) ${motorista.nome}.*\n\nPara organizarmos as rotas diárias com inteligência artificial, cliquem no link abaixo para iniciar o cadastro no meu privado:\n\n👉 ${linkMagico}\n\nLá irei pedir Nome, Turno e Endereços rapidinho!`);
                } else {
-                  // Autor que adicionou nÃ£o Ã© motorista e/ou nÃ£o tÃ¡ ativo. Vamos sair se nÃ£o tivermos esse grupo rodando.
-                  const grupoConhecido = await GrupoMotorista.findOne({ where: { group_jid: remoteJid } });
-                  if (!grupoConhecido) {
-                     console.log(`[Group Validation] Adicionado em grupo pirata/anÃ´nimo por ${author}. Saindo!`);
-                     EvolutionService.leaveGroup(remoteJid);
-                  }
+                  console.log(`[Groups.Upsert] Grupo ${groupJid} já existe no sistema.`);
+               }
+            } else {
+               // Não é motorista ativo — sai do grupo se não for conhecido
+               const grupoConhecido = await GrupoMotorista.findOne({ where: { group_jid: groupJid } });
+               if (!grupoConhecido) {
+                  console.log(`[Groups.Upsert] Bot adicionado a grupo desconhecido por ${authorPhone}. Saindo!`);
+                  await EvolutionService.leaveGroup(groupJid);
                }
             }
          }
       } catch (error) {
-         console.error('[Webhook] âŒ Erro crÃ­tico no processamento do webhook:', error);
+         console.error('[Groups.Upsert] ❌ Erro ao processar groups.upsert:', error.message || error);
+      }
+   }
+
+   /**
+    * Trata o evento group-participants.update da Evolution API v2.
+    * Na v2, o payload tem a estrutura:
+    * {
+    *   action: 'add' | 'remove' | 'promote' | 'demote',
+    *   participants: ['5511...@s.whatsapp.net'],
+    *   metadata: { groupJid: '120363...@g.us', author: '5511...@s.whatsapp.net' }
+    * }
+    * OU (dependendo da versão):
+    * {
+    *   id: '120363...@g.us',
+    *   action: 'add',
+    *   author: '5511...@s.whatsapp.net',
+    *   participants: ['5511...@s.whatsapp.net']
+    * }
+    */
+   _handleGroupParticipantsUpdate = async (data) => {
+      try {
+         if (!data) return;
+
+         // Compatibilidade com diferentes formatos da Evolution v1/v2
+         const action = data.action;
+         const participants = data.participants || [];
+
+         // groupJid pode estar em data.metadata.groupJid (v2) ou data.id (v1)
+         const remoteJid = data.metadata?.groupJid || data.id;
+
+         // author pode estar em data.metadata.author (v2) ou data.author (v1)
+         // Pode ser um LID, então tentamos também o campo alternativo
+         let author = data.metadata?.author || data.author;
+         const authorAlt = data.metadata?.sender || data.authorPn;
+
+         // Se o author for um LID, usa o alternativo se disponível
+         if (author && author.endsWith('@lid') && authorAlt) {
+            author = authorAlt;
+         }
+
+         console.log(`[Group Participants] Evento "${action}" no grupo ${remoteJid}, author: ${author}, participants: ${JSON.stringify(participants)}`);
+
+         if (action !== 'add' || !author || !remoteJid) {
+            return;
+         }
+
+         // Normaliza o telefone do author para buscar no banco
+         const normalizedAuthor = normalizePhone(author);
+
+         // Checa se o usuário que disparou isso é nosso motorista pagante ativo
+         const motorista = await Motorista.findOne({ where: { telefone: normalizedAuthor, status: 'ativo' } });
+
+         if (motorista) {
+            // Valida se o grupo já tá rastreado, senão cria e avisa!
+            const [grupo, created] = await GrupoMotorista.findOrCreate({
+               where: { group_jid: remoteJid },
+               defaults: { motorista_id: motorista.id, group_jid: remoteJid }
+            });
+            if (created) {
+               console.log(`[Group Participants] ✅ Grupo ${remoteJid} vinculado ao motorista ${motorista.nome}`);
+               const botPhone = process.env.BOT_PHONE_NUMBER || '5511999999999';
+               const linkMagico = `https://wa.me/${botPhone}?text=VAN%20${motorista.id}`;
+               await EvolutionService.sendMessage(remoteJid, `🚙 *Olá pessoal! Sou o assistente virtual da Van do(a) ${motorista.nome}.*\n\nPara organizarmos as rotas diárias com inteligência artificial, cliquem no link abaixo para iniciar o cadastro no meu privado:\n\n👉 ${linkMagico}\n\nLá irei pedir Nome, Turno e Endereços rapidinho!`);
+            }
+         } else {
+            // Autor que adicionou não é motorista e/ou não tá ativo. Vamos sair se não tivermos esse grupo rodando.
+            const grupoConhecido = await GrupoMotorista.findOne({ where: { group_jid: remoteJid } });
+            if (!grupoConhecido) {
+               console.log(`[Group Participants] Adicionado em grupo pirata/anônimo por ${author}. Saindo!`);
+               await EvolutionService.leaveGroup(remoteJid);
+            }
+         }
+      } catch (error) {
+         console.error('[Group Participants] ❌ Erro ao processar group-participants.update:', error.message || error);
       }
    }
 }
