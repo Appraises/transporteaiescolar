@@ -198,6 +198,43 @@ class WebhookController {
             // 1.6 FUNIL DE VENDAS PARA NOVOS MOTORISTAS (DESCONHECIDOS)
             const normalizedJid = normalizePhone(remoteJid);
 
+
+            // 1.6a LINK MAGICO (VAN X) - Intercepta ANTES do funil de vendas
+            // Quando um aluno clica no link magico do grupo, ele manda "VAN <id>" no privado.
+            if (!isGroup) {
+               const vanMatchEarly = textMessage.toUpperCase().trim().match(/^VAN\s+(\d+)$/);
+               if (vanMatchEarly) {
+                  const motoristaId = parseInt(vanMatchEarly[1]);
+                  const motoristaAlvo = await Motorista.findOne({ where: { id: motoristaId, status: 'ativo' } });
+
+                  if (!motoristaAlvo) {
+                     EvolutionService.sendMessage(remoteJid, '⚠️ Código de van inválido ou expirado. Peça ao motorista para reenviar o link no grupo.');
+                     return;
+                  }
+
+                  // Verifica se ja existe como passageiro
+                  let passageiroExistente = await Passageiro.findOne({ where: { telefone_responsavel: normalizedJid } });
+                  if (passageiroExistente && passageiroExistente.onboarding_step === 'CONCLUIDO') {
+                     EvolutionService.sendMessage(remoteJid, 'Você já está com o cadastro concluído no sistema da van!');
+                     return;
+                  }
+
+                  if (!passageiroExistente) {
+                     passageiroExistente = await Passageiro.create({
+                        nome: 'Aguardando',
+                        telefone_responsavel: normalizedJid,
+                        onboarding_step: 'AGUARDANDO_NOME',
+                        motorista_id: motoristaAlvo.id
+                     });
+                  }
+
+                  console.log('[Onboarding] Passageiro ' + normalizedJid + ' vinculado ao motorista ' + motoristaAlvo.nome + ' (ID ' + motoristaAlvo.id + ') via Link Mágico.');
+                  EvolutionService.sendMessage(remoteJid, '👋 Olá! Bem-vindo(a) ao *VANBORA*, o assistente inteligente da van do(a) *' + motoristaAlvo.nome + '*!\nVamos configurar a vaga do passageiro rapidinho.\n\n*1. Qual o nome completo do aluno que irá na Van?*');
+                  return;
+               }
+            }
+
+
             if (!isGroup) {
                const m = await Motorista.findOne({ where: { telefone: normalizedJid } });
                const p = await Passageiro.findOne({ where: { telefone_responsavel: normalizedJid } });
@@ -544,27 +581,6 @@ class WebhookController {
             // 3. Fila Privada (Chatbot de Onboarding)
             let passageiro = await Passageiro.findOne({ where: { telefone_responsavel: normalizedJid } });
 
-            // -> Link MÃ¡gico: Captura "VAN <motoristaId>" vindo do link wa.me clicÃ¡vel
-            const vanMatch = textMessage.toUpperCase().trim().match(/^VAN\s+(\d+)$/);
-            if (!passageiro && vanMatch) {
-               const motoristaId = parseInt(vanMatch[1]);
-               const motoristaAlvo = await Motorista.findOne({ where: { id: motoristaId, status: 'ativo' } });
-
-               if (!motoristaAlvo) {
-                  EvolutionService.sendMessage(remoteJid, `âš ï¸ CÃ³digo de van invÃ¡lido ou expirado. PeÃ§a ao motorista para reenviar o link no grupo.`);
-                  return;
-               }
-
-               passageiro = await Passageiro.create({
-                  nome: 'Aguardando',
-                  telefone_responsavel: normalizedJid,
-                  onboarding_step: 'AGUARDANDO_NOME',
-                  motorista_id: motoristaAlvo.id
-               });
-               console.log(`[Onboarding] Passageiro ${normalizedJid} vinculado ao motorista ${motoristaAlvo.nome} (ID ${motoristaAlvo.id}) via Link MÃ¡gico.`);
-               EvolutionService.sendMessage(remoteJid, `ðŸ‘‹ OlÃ¡! Bem-vindo(a) ao *VANBORA*, o assistente inteligente da van do(a) *${motoristaAlvo.nome}*!\nVamos configurar a vaga do passageiro rapidinho.\n\n*1. Qual o nome completo do aluno que irÃ¡ na Van?*`);
-               return;
-            }
 
             if (passageiro && passageiro.onboarding_step !== 'CONCLUIDO') {
                const passo = passageiro.onboarding_step;
