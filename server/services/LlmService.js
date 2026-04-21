@@ -375,9 +375,9 @@ class LlmService {
   getDriverOnboardingMessage(motoristaNome = 'Motorista') {
     return `🎉 *NÃO TEM MAIS PERGUNTAS!* FINALIZAMOS AS CONFIGURAÇÕES!
 
-👋 *Pronto, ${motoristaNome}! Tudo configurado no Gestor de Transporte Escolar AI!* 🚐💨
+👋 *Pronto, ${motoristaNome}! Tudo configurado no VANBORA!* 🚐💨
 
-Eu sou seu assistente inteligente e estou aqui no seu privado para comandar a sua logística.
+Eu sou o VANBORA, o seu assistente inteligente, e estou aqui no seu privado para comandar a sua logística.
 
 🚀 *Último passo para ativarmos o robô:*
 1. *Me adicione agora mesmo no grupo de WhatsApp com os seus passageiros.*

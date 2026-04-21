@@ -35,6 +35,7 @@ router.get('/admin/motoristas', adminAuth, AdminController.listarMotoristas);
 router.post('/admin/motoristas', adminAuth, AdminController.criarMotorista);
 router.get('/admin/motoristas/:id', adminAuth, AdminController.detalheMotorista);
 router.put('/admin/motoristas/:id/plano', adminAuth, AdminController.atualizarPlano);
+router.delete('/admin/motoristas/:id', adminAuth, AdminController.deletarMotorista);
 router.get('/admin/evolution/qrcode', adminAuth, AdminController.getQRCode);
 router.get('/admin/evolution/status', adminAuth, AdminController.getEvolutionStatus);
 router.get('/admin/evolution/config', adminAuth, AdminController.getEvolutionConfig);

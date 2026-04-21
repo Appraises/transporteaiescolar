@@ -6,7 +6,7 @@ const cors = require('cors');
 
 // --- SISTEMA DE LOGS PARA DEBUG NO PAINEL ---
 const logFile = path.join(__dirname, 'app.log');
-fs.writeFileSync(logFile, `[SISTEMA] Log iniciado em ${new Date().toLocaleString()}\n`);
+fs.appendFileSync(logFile, `\n\n=========================================\n[SISTEMA] Novo Log (Restart) iniciado em ${new Date().toLocaleString()}\n=========================================\n`);
 
 const patchConsole = (method) => {
   const original = console[method];
@@ -19,10 +19,14 @@ const patchConsole = (method) => {
 ['log', 'error', 'warn', 'info'].forEach(patchConsole);
 // ------------------------------------------
 
+console.log('[Sistema] Carregando modelos...');
 const { sequelize } = require('./models');
+console.log('[Sistema] Carregando rotas...');
 const routes = require('./routes');
+console.log('[Sistema] Carregando serviços de agendamento...');
 const CronService = require('./services/CronService');
 
+console.log('[Sistema] Inicializando Express...');
 const app = express();
 
 app.use(cors());
@@ -37,19 +41,22 @@ const PORT = process.env.PORT || 3000;
 const init = async () => {
   try {
     // Sincroniza os modelos com o banco de dados. 
-    // force: false não apaga os dados existentes.
-    await sequelize.sync({ force: false, alter: true }); // garante o Config model
+    console.log('[Banco de Dados] Iniciando sincronização...');
+    await sequelize.sync({ force: false, alter: false });
     console.log('[Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.');
 
     // Liga os Agendamentos da Nossa Logística Automática
+    console.log('[CronService] Iniciando agendamentos...');
     await CronService.startCronJobs();
+    console.log('[CronService] Agendamentos carregados com sucesso.');
 
     app.listen(PORT, () => {
         console.log(`[Servidor] Em execução na porta ${PORT}`);
     });
   } catch (error) {
-    console.error('Erro ao conectar com o banco de dados ou iniciar o servidor:', error);
+    console.error('[CRITICAL] Erro ao conectar com o banco de dados ou iniciar o servidor:', error);
   }
 };
 
 init();
+

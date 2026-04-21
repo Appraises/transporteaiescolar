@@ -1,15 +1,322 @@
-[SISTEMA] Log iniciado em 20/04/2026, 16:26:41
-16:26:46 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
-16:26:46 [LOG] [CronService] Carregando Agendamentos...
-16:26:46 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
-16:26:46 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
-16:26:46 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
-16:26:46 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
-16:26:46 [LOG] [Servidor] Em execução na porta 3000
-16:26:47 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
-16:26:47 [LOG] [CronService] Carregando Agendamentos...
-16:26:47 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
-16:26:47 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
-16:26:47 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
-16:26:47 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
-16:26:47 [LOG] [Servidor] Em execução na porta 3000
+[SISTEMA] Log iniciado em 21/04/2026, 14:44:56
+14:44:57 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+14:44:57 [LOG] [CronService] Carregando Agendamentos...
+14:44:57 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+14:44:57 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+14:44:57 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+14:44:57 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+14:44:57 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 14:45:14
+=========================================
+14:45:15 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+14:45:15 [LOG] [CronService] Carregando Agendamentos...
+14:45:15 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+14:45:15 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+14:45:15 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+14:45:15 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+14:45:15 [LOG] [Servidor] Em execução na porta 3000
+14:51:05 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"557998546591@s.whatsapp.net","remoteJidAlt":"557998546591@s.whatsapp.net","fromMe":false,"id":"3EB000899CD05E7C0AE49B","participant":"","addressingMode":"lid"},"pushName":"Arthur"
+14:51:05 [LOG] [Webhook] Mensagem recebida de 557998546591@s.whatsapp.net
+14:51:05 [LOG] [Vendas] Novo prospect: 557998546591@s.whatsapp.net. Enviando Pitch.
+14:51:06 [LOG] [Evolution] Simulando Digitação -> 15000 ms (458 chars)
+14:51:24 [ERROR] [EvolutionService] Erro brutal de disparo: Request failed with status code 400
+14:52:57 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"557998546591@s.whatsapp.net","remoteJidAlt":"557998546591@s.whatsapp.net","fromMe":false,"id":"3EB049708437A61CADB90F","participant":"","addressingMode":"lid"},"pushName":"Arthur"
+14:52:57 [LOG] [Webhook] Mensagem recebida de 557998546591@s.whatsapp.net
+14:53:00 [LOG] [Evolution] Simulando Digitação -> 15000 ms (322 chars)
+14:53:19 [ERROR] [EvolutionService] Erro brutal de disparo: Request failed with status code 400
+14:55:59 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"557998546591@s.whatsapp.net","remoteJidAlt":"557998546591@s.whatsapp.net","fromMe":false,"id":"4A15A44E411712194045","participant":"","addressingMode":"lid"},"pushName":"Arthur","
+14:55:59 [LOG] [Webhook] Mensagem recebida de 557998546591@s.whatsapp.net
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 14:59:54
+=========================================
+14:59:55 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+14:59:55 [LOG] [CronService] Carregando Agendamentos...
+14:59:55 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+14:59:55 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+14:59:55 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+14:59:55 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+14:59:55 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:00:14
+=========================================
+15:00:15 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:00:15 [LOG] [CronService] Carregando Agendamentos...
+15:00:15 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:00:15 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:00:15 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:00:15 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:00:15 [LOG] [Servidor] Em execução na porta 3000
+15:03:35 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"557998546591@s.whatsapp.net","remoteJidAlt":"557998546591@s.whatsapp.net","fromMe":false,"id":"3EB08CC981F26004A67A96","participant":"","addressingMode":"lid"},"pushName":"Arthur"
+15:03:35 [LOG] [Webhook] Mensagem recebida de 557998546591@s.whatsapp.net
+15:03:35 [LOG] [Financeiro] 📷 Imagem/Documento recebido de 557998546591@s.whatsapp.net. Possível comprovante de passageiro.
+15:03:35 [LOG] [Financeiro] Analisando Mídia Multimodal de 557998546591@s.whatsapp.net...
+15:03:42 [ERROR] [Webhook] âŒ Erro crÃ­tico no processamento do webhook: {"name":"SequelizeDatabaseError","parent":{"errno":1,"code":"SQLITE_ERROR","sql":"SELECT `id`, `nome`, `telefone_responsavel`, `grupo_id`, `cep`, `logradouro`, `numero`, `bairro`, `cidade`, `latitude`, `longitude`, `turno`, `mensalidade`, `onboarding_step`, `motorista_id`, `endereco_ida_id`, `endereco_volta_id`, `createdAt`, `updatedAt` FROM `passageiros` AS `Passageiro` WHERE `Passageiro`.`telefone` = '557998546591@s.whatsapp.net' LIMIT 1;"},"original":{"errno":1,"code":"SQLITE_ERROR","sql":"SELECT `id`, `nome`, `telefone_responsavel`, `grupo_id`, `cep`, `logradouro`, `numero`, `bairro`, `cidade`, `latitude`, `longitude`, `turno`, `mensalidade`, `onboarding_step`, `motorista_id`, `endereco_ida_id`, `endereco_volta_id`, `createdAt`, `updatedAt` FROM `passageiros` AS `Passageiro` WHERE `Passageiro`.`telefone` = '557998546591@s.whatsapp.net' LIMIT 1;"},"sql":"SELECT `id`, `nome`, `telefone_responsavel`, `grupo_id`, `cep`, `logradouro`, `numero`, `bairro`, `cidade`, `latitude`, `longitude`, `turno`, `mensalidade`, `onboarding_step`, `motorista_id`, `endereco_ida_id`, `endereco_volta_id`, `createdAt`, `updatedAt` FROM `passageiros` AS `Passageiro` WHERE `Passageiro`.`telefone` = '557998546591@s.whatsapp.net' LIMIT 1;","parameters":{}}
+15:05:55 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"557998546591@s.whatsapp.net","remoteJidAlt":"557998546591@s.whatsapp.net","fromMe":false,"id":"3EB0EACCA18D06F34F5C88","participant":"","addressingMode":"lid"},"pushName":"Arthur"
+15:05:55 [LOG] [Webhook] Mensagem recebida de 557998546591@s.whatsapp.net
+15:06:28 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"557998546591@s.whatsapp.net","remoteJidAlt":"557998546591@s.whatsapp.net","fromMe":false,"id":"3EB08EACABCBA31DBEA133","participant":"","addressingMode":"lid"},"pushName":"Arthur"
+15:06:28 [LOG] [Webhook] Mensagem recebida de 557998546591@s.whatsapp.net
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:11:26
+=========================================
+15:11:27 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:11:27 [LOG] [CronService] Carregando Agendamentos...
+15:11:27 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:11:27 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:11:27 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:11:27 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:11:27 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:11:34
+=========================================
+15:11:35 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:11:35 [LOG] [CronService] Carregando Agendamentos...
+15:11:35 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:11:35 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:11:35 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:11:35 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:11:35 [LOG] [Servidor] Em execução na porta 3000
+15:12:02 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"557998546591@s.whatsapp.net","remoteJidAlt":"557998546591@s.whatsapp.net","fromMe":false,"id":"3EB065FF75068FA6F55EB9","participant":"","addressingMode":"lid"},"pushName":"Arthur"
+15:12:02 [LOG] [Webhook] Mensagem recebida de 557998546591@s.whatsapp.net
+15:12:14 [LOG] [QueueService] Processando 1 mensagens acumuladas para 557998546591@s.whatsapp.net
+15:12:14 [LOG] [QueueService] Texto consolidado: "boa tarde"
+15:12:16 [LOG] [QueueService] 🧠 Intenção detectada para 557998546591@s.whatsapp.net: {"action":"GENERAL_CHAT","confidence":95,"details":{}}
+15:12:17 [LOG] [Evolution] Simulando Digitação -> 15000 ms (796 chars)
+15:12:34 [ERROR] [EvolutionService] Erro brutal de disparo: Request failed with status code 400
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:18:00
+=========================================
+15:18:01 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:18:01 [LOG] [CronService] Carregando Agendamentos...
+15:18:01 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:18:01 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:18:01 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:18:01 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:18:01 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:18:07
+=========================================
+15:18:08 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:18:08 [LOG] [CronService] Carregando Agendamentos...
+15:18:08 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:18:08 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:18:08 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:18:08 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:18:08 [LOG] [Servidor] Em execução na porta 3000
+15:19:58 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408245896543@g.us","fromMe":false,"id":"3EB077DD7864C69D757ABA","participant":"235149560119320@lid","participantAlt":"557998546591@s.whatsapp.net","addressingMode":"lid"},"p
+15:19:58 [LOG] [Webhook] Mensagem recebida de 120363408245896543@g.us
+15:21:14 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408245896543@g.us","fromMe":false,"id":"3EB08A15A91F4C10F948B1","participant":"235149560119320@lid","participantAlt":"557998546591@s.whatsapp.net","addressingMode":"lid"},"p
+15:21:14 [LOG] [Webhook] Mensagem recebida de 120363408245896543@g.us
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:21:55
+=========================================
+15:21:56 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:21:56 [LOG] [CronService] Carregando Agendamentos...
+15:21:56 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:21:56 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:21:56 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:21:56 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:21:56 [LOG] [Servidor] Em execução na porta 3000
+15:22:47 [LOG] [Webhook] Evento recebido: chats.update
+15:22:47 [LOG] [Webhook] Evento recebido: group-participants.update
+15:22:47 [LOG] [Webhook] âš ï¸ Nenhuma mensagem encontrada no campo data.
+15:23:41 [LOG] [Webhook] Evento recebido: groups.upsert
+15:23:41 [LOG] [DEBUG] Processando mensagem: {"id":"120363425478341286@g.us","addressingMode":"pn","subject":"van chongers","subjectOwner":"235149560119320@lid","subjectOwnerPn":"557998546591@s.whatsapp.net","subjectTime":1776795805,"size":3,"cr
+15:23:42 [LOG] [Webhook] Evento recebido: chats.upsert
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:25:56
+=========================================
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:26:29
+=========================================
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:30:13
+=========================================
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:36:39
+=========================================
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:38:53
+=========================================
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:42:53
+=========================================
+15:42:54 [LOG] [Sistema] Carregando modelos...
+15:42:54 [LOG] [Sistema] Carregando rotas...
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:43:12
+=========================================
+15:43:12 [LOG] [Sistema] Carregando modelos...
+15:43:13 [LOG] [Sistema] Carregando rotas...
+15:43:13 [LOG] [Sistema] Carregando serviços de agendamento...
+15:43:13 [LOG] [Sistema] Inicializando Express...
+15:43:13 [LOG] [Banco de Dados] Iniciando sincronização...
+15:43:13 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:43:13 [LOG] [CronService] Iniciando agendamentos...
+15:43:13 [LOG] [CronService] Carregando Agendamentos...
+15:43:13 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:43:13 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:43:13 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:43:13 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:43:13 [LOG] [CronService] Agendamentos carregados com sucesso.
+15:43:13 [LOG] [Servidor] Em execução na porta 3000
+15:43:27 [LOG] [Webhook] Evento recebido: connection.update
+15:43:27 [LOG] [Webhook] Evento recebido: connection.update
+15:43:32 [LOG] [Webhook] Evento recebido: connection.update
+15:43:32 [LOG] [Webhook] Evento recebido: connection.update
+15:44:34 [LOG] [Webhook] Evento recebido: groups.upsert
+15:44:34 [LOG] [DEBUG] Processando mensagem: {"id":"120363425448597573@g.us","addressingMode":"pn","subject":"Ingressos do che","subjectOwner":"235149560119320@lid","subjectOwnerPn":"557998546591@s.whatsapp.net","subjectTime":1776797059,"size":3
+15:44:34 [LOG] [Webhook] Evento recebido: chats.upsert
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:47:38
+=========================================
+15:47:38 [LOG] [Sistema] Carregando modelos...
+15:47:39 [LOG] [Sistema] Carregando rotas...
+15:47:39 [LOG] [Sistema] Carregando serviços de agendamento...
+15:47:39 [LOG] [Sistema] Inicializando Express...
+15:47:39 [LOG] [Banco de Dados] Iniciando sincronização...
+15:47:39 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:47:39 [LOG] [CronService] Iniciando agendamentos...
+15:47:39 [LOG] [CronService] Carregando Agendamentos...
+15:47:39 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:47:39 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:47:39 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:47:39 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:47:39 [LOG] [CronService] Agendamentos carregados com sucesso.
+15:47:39 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:48:08
+=========================================
+15:48:08 [LOG] [Sistema] Carregando modelos...
+15:48:09 [LOG] [Sistema] Carregando rotas...
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:48:29
+=========================================
+15:48:29 [LOG] [Sistema] Carregando modelos...
+15:48:29 [LOG] [Sistema] Carregando rotas...
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:49:17
+=========================================
+15:49:17 [LOG] [Sistema] Carregando modelos...
+15:49:18 [LOG] [Sistema] Carregando rotas...
+15:49:18 [LOG] [Sistema] Carregando serviços de agendamento...
+15:49:18 [LOG] [Sistema] Inicializando Express...
+15:49:18 [LOG] [Banco de Dados] Iniciando sincronização...
+15:49:18 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:49:18 [LOG] [CronService] Iniciando agendamentos...
+15:49:18 [LOG] [CronService] Carregando Agendamentos...
+15:49:18 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:49:18 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:49:18 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:49:18 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:49:18 [LOG] [CronService] Agendamentos carregados com sucesso.
+15:49:18 [LOG] [Servidor] Em execução na porta 3000
+15:49:28 [LOG] [Webhook] Evento recebido: group-participants.update
+15:49:28 [ERROR] [Webhook] ❌ Erro crítico: {}
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:49:47
+=========================================
+15:49:47 [LOG] [Sistema] Carregando modelos...
+15:49:48 [LOG] [Sistema] Carregando rotas...
+15:49:48 [LOG] [Sistema] Carregando serviços de agendamento...
+15:49:48 [LOG] [Sistema] Inicializando Express...
+15:49:48 [LOG] [Banco de Dados] Iniciando sincronização...
+15:49:48 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:49:48 [LOG] [CronService] Iniciando agendamentos...
+15:49:48 [LOG] [CronService] Carregando Agendamentos...
+15:49:48 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:49:48 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:49:48 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:49:48 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:49:48 [LOG] [CronService] Agendamentos carregados com sucesso.
+15:49:49 [LOG] [Servidor] Em execução na porta 3000
+15:50:38 [LOG] [Webhook] Evento recebido: groups.upsert
+15:50:38 [ERROR] [Webhook] ❌ Erro crítico: TypeError: Cannot read properties of undefined (reading 'handleGroupOnboarding')
+    at handleEvolutionAPI (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\controllers\WebhookController.js:52:22)
+    at Layer.handleRequest (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\index.js:295:15
+    at processParams (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\index.js:291:5)
+    at Function.handle (C:\Users\Bruno Lopes\Documents\GitHub\transporteaiescolar\server\node_modules\router\index.js:186:3)
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:50:50
+=========================================
+15:50:50 [LOG] [Sistema] Carregando modelos...
+15:50:51 [LOG] [Sistema] Carregando rotas...
+15:50:51 [LOG] [Sistema] Carregando serviços de agendamento...
+15:50:51 [LOG] [Sistema] Inicializando Express...
+15:50:51 [LOG] [Banco de Dados] Iniciando sincronização...
+15:50:51 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:50:51 [LOG] [CronService] Iniciando agendamentos...
+15:50:51 [LOG] [CronService] Carregando Agendamentos...
+15:50:51 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:50:51 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:50:51 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:50:51 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:50:51 [LOG] [CronService] Agendamentos carregados com sucesso.
+15:50:51 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 21/04/2026, 15:50:59
+=========================================
+15:50:59 [LOG] [Sistema] Carregando modelos...
+15:51:00 [LOG] [Sistema] Carregando rotas...
+15:51:00 [LOG] [Sistema] Carregando serviços de agendamento...
+15:51:00 [LOG] [Sistema] Inicializando Express...
+15:51:00 [LOG] [Banco de Dados] Iniciando sincronização...
+15:51:01 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+15:51:01 [LOG] [CronService] Iniciando agendamentos...
+15:51:01 [LOG] [CronService] Carregando Agendamentos...
+15:51:01 [LOG] [CronService] Turno manha -> Poll: 05:00 | Fechamento: 05:55
+15:51:01 [LOG] [CronService] Turno tarde -> Poll: 11:00 | Fechamento: 11:55
+15:51:01 [LOG] [CronService] Turno noite -> Poll: 17:00 | Fechamento: 17:55
+15:51:01 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+15:51:01 [LOG] [CronService] Agendamentos carregados com sucesso.
+15:51:01 [LOG] [Servidor] Em execução na porta 3000

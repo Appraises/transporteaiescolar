@@ -21,7 +21,8 @@ import {
   Settings,
   Volume2,
   ShieldAlert,
-  Globe
+  Globe,
+  Trash2
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -62,6 +63,11 @@ const AdminDashboard = () => {
       });
     } catch (err) {
       console.error('Erro ao buscar dados admin', err);
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('isAdmin');
+        window.location.href = '/admin/login';
+      }
     } finally {
       setLoading(false);
     }
@@ -176,6 +182,18 @@ const AdminDashboard = () => {
       alert('Erro ao atualizar valor');
     }
   };
+  
+  const handleDeleteMotorista = async (motoristaId) => {
+    if (!window.confirm('TEM CERTEZA? Isso excluirá permanentemente o motorista e todos os seus passageiros, viagens e histórico financeiro.')) return;
+
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      await axios.delete(`/api/admin/motoristas/${motoristaId}`, config);
+      fetchAll();
+    } catch (e) {
+      alert(e.response?.data?.error || 'Erro ao deletar motorista');
+    }
+  };
 
   const handleAddMotorista = async (e) => {
     if (e) e.preventDefault();
@@ -211,7 +229,7 @@ const AdminDashboard = () => {
   );
 
   const filteredMotoristas = motoristas.filter(m => 
-    (m.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (m.nome || 'Motorista em Onboarding').toLowerCase().includes(searchTerm.toLowerCase()) || 
     m.telefone.includes(searchTerm)
   );
 
@@ -453,7 +471,7 @@ const AdminDashboard = () => {
                                  {(m.nome || '?').charAt(0)}
                               </div>
                               <div>
-                                 <div style={{ color: 'var(--color-text)' }} className="text-sm font-bold group-hover:text-primary transition-colors">{m.nome}</div>
+                                 <div style={{ color: 'var(--color-text)' }} className="text-sm font-bold group-hover:text-primary transition-colors">{m.nome || 'Motorista em Onboarding'}</div>
                                  <div style={{ color: 'var(--color-text-light)' }} className="text-xs">{m.telefone.replace('@s.whatsapp.net', '')}</div>
                               </div>
                            </div>

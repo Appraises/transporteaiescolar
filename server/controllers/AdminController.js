@@ -158,7 +158,25 @@ class AdminController {
       // Verifica se já existe
       const jaExiste = await Motorista.findOne({ where: { telefone: phoneId } });
       if (jaExiste) {
-        return res.status(400).json({ error: 'Motorista com este telefone já existe.' });
+        if (jaExiste.status === 'lead') {
+          // "Promove" o lead para ativo
+          jaExiste.nome = nome;
+          jaExiste.status = 'ativo';
+          await jaExiste.save();
+          
+          if (valor_plano) {
+            const Assinatura = require('../models/Assinatura');
+            await Assinatura.create({
+              motorista_id: jaExiste.id,
+              valor_plano,
+              status: 'ativo',
+              data_inicio: new Date()
+            });
+          }
+          
+          return res.status(200).json(jaExiste);
+        }
+        return res.status(400).json({ error: 'Motorista com este telefone já existe e já está ativo.' });
       }
 
       const novoMotorista = await Motorista.create({
@@ -339,10 +357,29 @@ class AdminController {
         });
       }
 
-      const url = `${evolutionUrl}/instance/connect/${instanceId}`;
-      const response = await axios.get(url, {
-        headers: { 'apikey': apiToken }
-      });
+      let response;
+      try {
+        const url = `${evolutionUrl}/instance/connect/${instanceId}`;
+        response = await axios.get(url, { headers: { 'apikey': apiToken } });
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          // Instância não existe. Vamos criar.
+          await axios.post(`${evolutionUrl}/instance/create`, {
+            instanceName: instanceId,
+            integration: "WHATSAPP-BAILEYS",
+            qrcode: true
+          }, { headers: { 'apikey': apiToken } });
+          
+          const url = `${evolutionUrl}/instance/connect/${instanceId}`;
+          response = await axios.get(url, { headers: { 'apikey': apiToken } });
+        } else {
+          throw err;
+        }
+      }
+
+      if (response.data?.instance?.state === 'open' && !response.data?.base64) {
+         return res.status(400).json({ error: 'A instância já está conectada. Atualize a página.' });
+      }
 
       return res.status(200).json(response.data);
     } catch (error) {
@@ -617,6 +654,43 @@ class AdminController {
     } catch (error) {
       console.error('[AdminController] Erro salvarMotoristaConfig:', error);
       return res.status(500).json({ error: 'Falha ao salvar config do motorista' });
+    }
+  }
+
+  async deletarMotorista(req, res) {
+    try {
+      const { id } = req.params;
+      const motorista = await Motorista.findByPk(id);
+      if (!motorista) return res.status(404).json({ error: 'Motorista não encontrado' });
+
+      console.log(`[Admin] Excluindo motorista ID ${id} e dados vinculados...`);
+
+      // Limpeza manual de tabelas vinculadas (SQLite cascade fallback)
+      await Assinatura.destroy({ where: { motorista_id: id } });
+      await Config.destroy({ where: { motorista_id: id } });
+      await Despesa.destroy({ where: { motorista_id: id } });
+      await require('../models/GrupoMotorista').destroy({ where: { motorista_id: id } });
+
+      const viagens = await require('../models/Viagem').findAll({ where: { motorista_id: id } });
+      const vIds = viagens.map(v => v.id);
+      if (vIds.length > 0) {
+        await require('../models/ViagemPassageiro').destroy({ where: { viagem_id: { [Op.in]: vIds } } });
+        await require('../models/Viagem').destroy({ where: { motorista_id: id } });
+      }
+
+      const passageiros = await Passageiro.findAll({ where: { motorista_id: id } });
+      const pIds = passageiros.map(p => p.id);
+      if (pIds.length > 0) {
+        await Financeiro.destroy({ where: { passageiro_id: { [Op.in]: pIds } } });
+        await Endereco.destroy({ where: { passageiro_id: { [Op.in]: pIds } } });
+        await Passageiro.destroy({ where: { motorista_id: id } });
+      }
+
+      await motorista.destroy();
+      return res.status(200).json({ status: 'Excluído com sucesso' });
+    } catch (error) {
+      console.error('[AdminController] Erro ao deletar motorista:', error);
+      return res.status(500).json({ error: 'Erro interno ao deletar motorista' });
     }
   }
 }

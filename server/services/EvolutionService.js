@@ -90,7 +90,10 @@ class EvolutionService {
    * Limpa o número para o formato que a Evolution v2 prefere (sem sufixos)
    */
   formatNumber(phoneId) {
-    return phoneId.replace(/\D/g, '');
+    if (phoneId && phoneId.endsWith('@g.us')) {
+      return phoneId;
+    }
+    return phoneId ? phoneId.replace(/\D/g, '') : '';
   }
 
   /**
@@ -110,6 +113,9 @@ class EvolutionService {
           return true;
       } catch (error) {
           console.error('[EvolutionService] Falha ao enviar presença:', error.message);
+          if (error.response) {
+              console.error('[EvolutionService] Detalhes do erro de presença:', JSON.stringify(error.response.data));
+          }
           return false;
       }
   }
@@ -160,6 +166,14 @@ class EvolutionService {
       return true;
     } catch (error) {
       console.error('[EvolutionService] Erro brutal de disparo:', error.message);
+      if (error.response) {
+          console.error('[EvolutionService] URL do erro:', url);
+          console.error('[EvolutionService] Detalhes do erro da API:', JSON.stringify(error.response.data));
+          console.error('[EvolutionService] Payload enviado:', JSON.stringify({
+            number: this.formatNumber(phoneId),
+            text: finalMessage
+          }));
+      }
       return false;
     }
   }
