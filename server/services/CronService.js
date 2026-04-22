@@ -87,7 +87,7 @@ class CronService {
       } catch (e) {
         console.error('[Cron] Falha ao gerar mensalidades:', e);
       }
-    });
+    }, { timezone: "America/Sao_Paulo" });
     console.log('[CronService] Geração automática de mensalidades agendada (dia 1, 00:05).');
   }
 
@@ -136,7 +136,7 @@ class CronService {
        } catch (e) {
            console.error('[Cron] Falha ao rodar checagem proativa de feriados', e);
        }
-    });
+    }, { timezone: "America/Sao_Paulo" });
   }
 
   agendarLembreteEnderecos() {
@@ -191,7 +191,7 @@ class CronService {
        } catch (e) {
            console.error('[Cron] Falha ao enviar lembretes de endereço:', e);
        }
-    });
+    }, { timezone: "America/Sao_Paulo" });
   }
 
   agendarRelatorioMensal() {
@@ -257,7 +257,7 @@ class CronService {
        } catch (e) {
            console.error('[Cron] Falha ao gerar relatório mensal:', e);
        }
-    });
+    }, { timezone: "America/Sao_Paulo" });
   }
 
   agendarCobrancasDiarias() {
@@ -279,42 +279,56 @@ class CronService {
       } catch (e) {
         console.error('[Cron] Falha ao enviar cobrancas:', e);
       }
-    });
+    }, { timezone: "America/Sao_Paulo" });
+  }
+
+  _horaAtualSaoPaulo() {
+    return new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(new Date());
+  }
+
+  async _getConfigValue(chave, motoristaId, fallback) {
+    const configMotorista = await Config.findOne({ where: { chave, motorista_id: motoristaId } });
+    if (configMotorista?.valor) return configMotorista.valor;
+
+    const configGlobal = await Config.findOne({ where: { chave, motorista_id: null } });
+    return configGlobal?.valor || fallback;
+  }
+
+  async _getTurnoConfig(motoristaId, turnoNome, fallbackHoraEnquete, fallbackHoraFechamento) {
+    const horaEnquete = await this._getConfigValue(`cron_enquete_${turnoNome}`, motoristaId, fallbackHoraEnquete);
+    const horaFechamento = await this._getConfigValue(`cron_fechamento_${turnoNome}`, motoristaId, fallbackHoraFechamento);
+    return { horaEnquete, horaFechamento };
   }
 
   async schedularTurno(turnoNome, fallbackHoraEnquete, fallbackHoraFechamento) {
-    // Busca do SQLite se houver override do painel Config
-    const dbConfigEnquete = await Config.findOne({ where: { chave: `cron_enquete_${turnoNome}` } });
-    const dbConfigFechamento = await Config.findOne({ where: { chave: `cron_fechamento_${turnoNome}` } });
-
-    const horaEnquete = dbConfigEnquete ? dbConfigEnquete.valor : fallbackHoraEnquete;
-    const horaFechamento = dbConfigFechamento ? dbConfigFechamento.valor : fallbackHoraFechamento;
-
     // Destrói agendamentos velhos se existirem (Reload de Config)
     if(activeJobs[`${turnoNome}_enquete`]) activeJobs[`${turnoNome}_enquete`].stop();
     if(activeJobs[`${turnoNome}_fechamento`]) activeJobs[`${turnoNome}_fechamento`].stop();
 
     // 1. Agendamento do Disparo da Enquete
-    const [hhE, mmE] = horaEnquete.split(':');
-    const cronEnquete = `${mmE} ${hhE} * * 1-5`; // Seg a Sexta
+    const cronEnquete = '* * * * 1-5'; // Seg a Sexta, decide por motorista no callback
     
     activeJobs[`${turnoNome}_enquete`] = cron.schedule(cronEnquete, async () => {
-      console.log(`[Cron] Acionando Enquete de ${turnoNome}`);
+      const horaAtual = this._horaAtualSaoPaulo();
       
       const { Motorista, GrupoMotorista } = require('../models');
       const hoje = new Date();
       const hojeStr = hoje.toISOString().split('T')[0];
 
-      // Busca motoristas ativos que possuem grupos cadastrados
-      const grupos = await GrupoMotorista.findAll({
-         include: [{
-            model: Motorista,
-            where: { status: 'ativo' }
-         }]
-      });
+      // Busca grupos e depois encontra o motorista
+      const grupos = await GrupoMotorista.findAll();
 
       for (const grupo of grupos) {
-         const m = grupo.Motorista;
+         const m = await Motorista.findOne({ where: { id: grupo.motorista_id, status: 'ativo' }});
+         if (!m) continue;
+
+         const { horaEnquete } = await this._getTurnoConfig(m.id, turnoNome, fallbackHoraEnquete, fallbackHoraFechamento);
+         if (horaEnquete !== horaAtual) continue;
          
          // Regra 1: Férias indefinidas
          if (m.em_ferias) {
@@ -330,24 +344,42 @@ class CronService {
              }
          }
 
+         console.log(`[Cron] Acionando Enquete de ${turnoNome} para ${m.nome} (${horaAtual})`);
          await PollService.dispararEnquete(turnoNome, grupo.group_jid);
       }
-    });
+    }, { timezone: "America/Sao_Paulo" });
 
     // 2. Agendamento do Fechamento e Envio Pro Motorista
-    const [hhF, mmF] = horaFechamento.split(':');
-    const cronFechamento = `${mmF} ${hhF} * * 1-5`; // Seg a Sexta
+    const cronFechamento = '* * * * 1-5'; // Seg a Sexta, decide por motorista no callback
 
     activeJobs[`${turnoNome}_fechamento`] = cron.schedule(cronFechamento, async () => {
-      console.log(`[Cron] Fechando Rota de ${turnoNome} e enviando Rota Ótima para os motoristas...`);
-      
       try {
         const { Motorista, Viagem, ViagemPassageiro, Passageiro, Endereco } = require('../models');
+        const { Op } = require('sequelize');
+        const horaAtual = this._horaAtualSaoPaulo();
         const hojeStr = new Date().toISOString().split('T')[0];
+        const motoristasAtivos = await Motorista.findAll({ where: { status: 'ativo' } });
+        const motoristasNoHorario = [];
+
+        for (const motorista of motoristasAtivos) {
+          const { horaFechamento } = await this._getTurnoConfig(motorista.id, turnoNome, fallbackHoraEnquete, fallbackHoraFechamento);
+          if (horaFechamento === horaAtual) {
+            motoristasNoHorario.push(motorista.id);
+          }
+        }
+
+        if (motoristasNoHorario.length === 0) return;
+
+        console.log(`[Cron] Fechando Rota de ${turnoNome} para ${motoristasNoHorario.length} motorista(s) no horario ${horaAtual}...`);
 
         // Busca todas as viagens de hoje para esse turno
         const viagensHoje = await Viagem.findAll({
-          where: { data: hojeStr, turno: turnoNome, status: 'pendente' }
+          where: {
+            data: hojeStr,
+            turno: turnoNome,
+            status: 'pendente',
+            motorista_id: { [Op.in]: motoristasNoHorario }
+          }
         });
 
         if (viagensHoje.length === 0) {
@@ -411,7 +443,7 @@ class CronService {
           const MessageVariation = require('../utils/MessageVariation');
 
           // Gera rota de IDA
-          if (passageirosIda.length > 0) {
+          if (passageirosIda.length > 0 && !viagem.rota_ida_enviada) {
             const resultadoIda = RoutingService.calculateOptimalRoute(passageirosIda, coordsBase);
             
             // Monta a lista numerada dos passageiros
@@ -430,11 +462,18 @@ class CronService {
               }
             }
 
-            await EvolutionService.sendMessage(motorista.telefone, textIda);
+            viagem.rota_ida_enviada = true;
+            await viagem.save();
+            const idaEnviada = await EvolutionService.sendMessage(motorista.telefone, textIda);
+            if (!idaEnviada) {
+              console.warn(`[Cron] Falha/retorno incerto ao enviar rota de IDA da viagem #${viagem.id}. Marcada como enviada para evitar duplicidade; verifique manualmente.`);
+            }
+          } else if (passageirosIda.length > 0) {
+            console.log(`[Cron] Rota de IDA da viagem #${viagem.id} ja foi enviada. Pulando reenvio.`);
           }
 
           // Gera rota de VOLTA
-          if (passageirosVolta.length > 0) {
+          if (passageirosVolta.length > 0 && !viagem.rota_volta_enviada) {
             const resultadoVolta = RoutingService.calculateOptimalRoute(passageirosVolta, coordsBase);
             
             let listaVolta = '';
@@ -443,30 +482,63 @@ class CronService {
             });
 
             const textVolta = MessageVariation.logistica.rotaVolta(turnoNome, passageirosVolta.length, listaVolta);
-            await EvolutionService.sendMessage(motorista.telefone, textVolta);
+            viagem.rota_volta_enviada = true;
+            await viagem.save();
+            const voltaEnviada = await EvolutionService.sendMessage(motorista.telefone, textVolta);
+            if (!voltaEnviada) {
+              console.warn(`[Cron] Falha/retorno incerto ao enviar rota de VOLTA da viagem #${viagem.id}. Marcada como enviada para evitar duplicidade; verifique manualmente.`);
+            }
+          } else if (passageirosVolta.length > 0) {
+            console.log(`[Cron] Rota de VOLTA da viagem #${viagem.id} ja foi enviada. Pulando reenvio.`);
           }
 
           // Se ninguém votou, avisa ao motorista
-          if (passageirosIda.length === 0 && passageirosVolta.length === 0) {
-            await EvolutionService.sendMessage(motorista.telefone, MessageVariation.logistica.turnoLivre(turnoNome));
+          if (passageirosIda.length === 0 && passageirosVolta.length === 0 && !viagem.turno_livre_enviado) {
+            viagem.turno_livre_enviado = true;
+            await viagem.save();
+            const turnoLivreEnviado = await EvolutionService.sendMessage(motorista.telefone, MessageVariation.logistica.turnoLivre(turnoNome));
+            if (!turnoLivreEnviado) {
+              console.warn(`[Cron] Falha/retorno incerto ao enviar aviso de turno livre da viagem #${viagem.id}. Marcado como enviado para evitar duplicidade; verifique manualmente.`);
+            }
           }
 
           // Atualiza status da viagem
-          viagem.status = 'rota_gerada';
-          await viagem.save();
-          console.log(`[Cron] Rota gerada para motorista ${motorista.nome} (Viagem #${viagem.id})`);
+          // A viagem so vira rota_gerada depois que todos os envios necessarios forem confirmados.
 
           // Pede ao motorista para compartilhar localização em tempo real
-          if (passageirosIda.length > 0 || passageirosVolta.length > 0) {
-            await EvolutionService.sendMessage(motorista.telefone, MessageVariation.rastreamento.pedirLocalizacao());
+          if ((passageirosIda.length > 0 || passageirosVolta.length > 0) && !viagem.pedido_gps_enviado) {
+            viagem.pedido_gps_enviado = true;
+            await viagem.save();
+            const gpsEnviado = await EvolutionService.sendMessage(motorista.telefone, MessageVariation.rastreamento.pedirLocalizacao());
+            if (!gpsEnviado) {
+              console.warn(`[Cron] Falha/retorno incerto ao enviar pedido de GPS da viagem #${viagem.id}. Marcado como enviado para evitar duplicidade; verifique manualmente.`);
+            }
+          }
+
+          const precisaIda = passageirosIda.length > 0;
+          const precisaVolta = passageirosVolta.length > 0;
+          const rotasNecessariasEnviadas =
+            (!precisaIda || viagem.rota_ida_enviada) &&
+            (!precisaVolta || viagem.rota_volta_enviada);
+          const gpsNecessarioEnviado =
+            (passageirosIda.length === 0 && passageirosVolta.length === 0) || viagem.pedido_gps_enviado;
+          const turnoLivreNecessarioEnviado =
+            (passageirosIda.length > 0 || passageirosVolta.length > 0) || viagem.turno_livre_enviado;
+
+          if (rotasNecessariasEnviadas && gpsNecessarioEnviado && turnoLivreNecessarioEnviado) {
+            viagem.status = 'rota_gerada';
+            await viagem.save();
+            console.log(`[Cron] Rota gerada para motorista ${motorista.nome} (Viagem #${viagem.id})`);
+          } else {
+            console.warn(`[Cron] Fechamento da viagem #${viagem.id} ficou incompleto. Proximo retry nao reenviara trechos ja marcados como enviados.`);
           }
         }
       } catch (err) {
         console.error(`[Cron] Erro ao fechar rota de ${turnoNome}:`, err);
       }
-    });
+    }, { timezone: "America/Sao_Paulo" });
 
-    console.log(`[CronService] Turno ${turnoNome} -> Poll: ${horaEnquete} | Fechamento: ${horaFechamento}`);
+    console.log(`[CronService] Turno ${turnoNome} -> jobs por minuto com defaults Poll: ${fallbackHoraEnquete} | Fechamento: ${fallbackHoraFechamento}`);
   }
 
 }

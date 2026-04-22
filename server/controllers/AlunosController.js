@@ -1,10 +1,12 @@
 const Passageiro = require('../models/Passageiro');
+const { normalizePhone } = require('../utils/phoneHelper');
 
 class AlunosController {
-  
+
   async listar(req, res) {
     try {
       const alunos = await Passageiro.findAll({
+        where: { motorista_id: req.motoristaId },
         order: [['nome', 'ASC']]
       });
       res.status(200).json(alunos);
@@ -16,15 +18,15 @@ class AlunosController {
 
   async criar(req, res) {
     try {
-      const { nome, telefone, bairro, turno_padrao, motorista_id, mensalidade } = req.body;
-      
+      const { nome, telefone, bairro, turno_padrao, mensalidade } = req.body;
+
       const novoAluno = await Passageiro.create({
         nome,
-        telefone_responsavel: telefone.includes('@s.whatsapp.net') ? telefone : `${telefone}@s.whatsapp.net`,
+        telefone_responsavel: normalizePhone(telefone),
         bairro,
         turno: turno_padrao || 'manha',
         mensalidade: parseFloat(mensalidade) || null,
-        motorista_id: motorista_id || 1, // Fallback para motorista 1 enquanto não há auth
+        motorista_id: req.motoristaId,
         onboarding_step: 'CONCLUIDO'
       });
 
@@ -39,13 +41,13 @@ class AlunosController {
     try {
       const { id } = req.params;
       const { nome, telefone, bairro, turno_padrao, mensalidade } = req.body;
-      
-      const aluno = await Passageiro.findByPk(id);
-      if (!aluno) return res.status(404).json({ error: 'Aluno não encontrado' });
+
+      const aluno = await Passageiro.findOne({ where: { id, motorista_id: req.motoristaId } });
+      if (!aluno) return res.status(404).json({ error: 'Aluno nao encontrado' });
 
       let novoTelefone = aluno.telefone_responsavel;
       if (telefone) {
-        novoTelefone = telefone.includes('@s.whatsapp.net') ? telefone : `${telefone}@s.whatsapp.net`;
+        novoTelefone = normalizePhone(telefone);
       }
 
       await aluno.update({

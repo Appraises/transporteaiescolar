@@ -23,10 +23,24 @@ class GeocodeService {
       });
 
       if (response.data.status === 'OK' && response.data.results.length > 0) {
-        const location = response.data.results[0].geometry.location;
+        const result = response.data.results[0];
+        const location = result.geometry.location;
+        
+        // Tenta extrair o bairro dos address_components
+        let neighborhood = null;
+        if (result.address_components) {
+          const bairroComp = result.address_components.find(c => 
+            c.types.includes('sublocality_level_1') || 
+            c.types.includes('neighborhood') || 
+            c.types.includes('sublocality')
+          );
+          if (bairroComp) neighborhood = bairroComp.long_name;
+        }
+
         return {
           lat: location.lat,
-          lng: location.lng
+          lng: location.lng,
+          neighborhood: neighborhood
         };
       }
       

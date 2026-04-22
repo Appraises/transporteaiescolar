@@ -265,7 +265,7 @@ const salesPitchMessages = [
 
 const salesPaymentMessages = [
     (valor, tipo, chave) => `🎉 *Excelente escolha! Você está a um passo de modernizar sua van.*\n\nPara ativar o seu acesso, realize o pagamento da primeira mensalidade:\n\n💰 *Valor:* R$ ${valor.toFixed(2)}\n🔑 *Chave PIX (${tipo}):* ${chave}\n\n📸 Após realizar o pagamento, **mande a foto ou PDF do comprovante aqui mesmo**.\n\nNossa inteligência artificial vai validar o seu pagamento em segundos e já liberar o seu bot!`,
-    (valor, tipo, chave) => `Vamos nessa! 🚀\n\nPara destravar todas as minhas funcionalidades pro seu painel, você só precisa fazer o PIX de adesão:\n\n💳 *Valor a pagar:* R$ ${valor.toFixed(2)}\n🔑 *Identificação PIX (${tipo}):* ${chave}\n\nManda a foto/print do comprovante por aqui assim que terminar!\nEu reconheço o pagamento sozinho e te dou acesso imediato.`,
+    (valor, tipo, chave) => `Vamos nessa! 🚀\n\nPara destravar todas as minhas funcionalidades pro seu painel, você só precisa fazer o PIX de adesão:\n\n💳 *Valor a pagar:* R$ ${valor.toFixed(2)}\n🔑 *Identificação PIX (${tipo}):* ${chave}\n\nManda a foto/print do comprovante por aqui assim que terminar!\nEu reconheço o pagamento sozinho e te dou acesso imediatoda.`,
     (valor, tipo, chave) => `Ótimo! Sua vida vai ficar muito mais fácil. 😎\n\nPor favor, faça o PIX do primeiro mês de uso:\n\n💵 *Mensalidade:* R$ ${valor.toFixed(2)}\n🔑 *Chave PIX (${tipo}):* ${chave}\n\nTerminou? Envia a imagem do seu comprovante direto nesse chat. Meu sistema de visão artificial já confere e ativa sua assinatura em poucos segundos!`
 ];
 
@@ -290,9 +290,9 @@ module.exports = {
     },
     logistica: {
         pollHeader: (turno) => pick(pollAnnouncements)(turno),
-        rotaIda: (turno, qtd, listaPassageiros) => pick(routeIdaMessages)(turno, qtd, listaPassageiros),
-        rotaVolta: (turno, qtd, listaPassageiros) => pick(routeVoltaMessages)(turno, qtd, listaPassageiros),
-        turnoLivre: (turno) => pick(routeEmptyMessages)(turno)
+        rotaIda: (turno, qtd, listaPassageiros) => `IDA - ${String(turno).toUpperCase()}\n${qtd} confirmado(s) para esse turno\n\n1. Base\n${listaPassageiros}\nChegada`,
+        rotaVolta: (turno, qtd, listaPassageiros) => `VOLTA - ${String(turno).toUpperCase()}\n${qtd} confirmado(s) para esse turno\n\n1. Escola\n${listaPassageiros}\nRetorno: base`,
+        turnoLivre: (turno) => `${String(turno).toUpperCase()}: nenhum passageiro confirmou presenca na enquete de hoje. Turno livre.`
     },
     despesas: {
         confirmacao: (categoria, valor, totalMes) => pick(expenseConfirmations)(categoria, valor, totalMes),
@@ -311,7 +311,7 @@ module.exports = {
     rastreamento: {
         vanChegando: (nome) => pick(trackingArriving)(nome),
         vanProxima: (nome) => pick(trackingNearby)(nome),
-        pedirLocalizacao: () => pick(trackingRequestLocation)(),
+        pedirLocalizacao: () => 'Agora compartilhe sua localizacao em tempo real por 2 horas para eu acompanhar a rota e avisar os passageiros.',
         rotaFinalizada: (trecho, qtd) => pick(trackingRouteFinished)(trecho, qtd),
         raioAlterado: (km) => pick(trackingRadiusChanged)(km),
         vanChegandoEscola: (escolaNome) => pick(trackingSchoolArrival)(escolaNome)

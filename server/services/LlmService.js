@@ -370,6 +370,89 @@ class LlmService {
   }
 
   /**
+   * Analisa o turno informado pelo passageiro e padroniza para: Manhã, Tarde ou Noite.
+   */
+  async parseShift(rawText) {
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('[LlmService] GEMINI_API_KEY ausente. Usando mock para parseShift.');
+      const lower = rawText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (lower.includes('manha') || lower.includes('cedo') || lower.includes('am')) return { shift: 'Manhã', confidence: 100 };
+      if (lower.includes('tarde') || lower.includes('pm')) return { shift: 'Tarde', confidence: 100 };
+      if (lower.includes('noite') || lower.includes('escuro')) return { shift: 'Noite', confidence: 100 };
+      return { shift: 'UNKNOWN', confidence: 0 };
+    }
+
+    const prompt = `
+      Você é um assistente de uma van escolar. O passageiro/aluno está informando o período em que estuda.
+      Entrada do usuário: "${rawText}"
+
+      Sua tarefa é categorizar essa entrada em um dos três turnos abaixo:
+      - "Manhã"
+      - "Tarde"
+      - "Noite"
+
+      Regras:
+      1. Se a entrada for ambígua ou contiver erros de áudio (ex: "mãe, ã", "manha", "cedo"), identifique o turno mais provável (ex: "Manhã").
+      2. Se não houver clareza suficiente para decidir entre os 3, retorne "UNKNOWN".
+      3. Importante: "Integral" NÃO é mais aceito, se ele disser integral, tente identificar se ele quer dizer que vai nos dois principais ou retorne "UNKNOWN".
+
+      Retorne EXATAMENTE APENAS um JSON válido (sem markdown):
+      {
+        "shift": "Manhã | Tarde | Noite | UNKNOWN",
+        "confidence": <0 a 100>
+      }
+    `;
+
+    try {
+      const response = await GeminiQueueService.enqueue(() => 
+        this.ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        })
+      );
+
+      const textOutput = response.text;
+      const cleanJsonStr = textOutput.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanJsonStr);
+    } catch (error) {
+      console.error('[LlmService] Falha ao extrair turno:', error);
+      return { shift: 'UNKNOWN', confidence: 0 };
+    }
+  }
+
+  /**
+   * Tenta extrair o nome de um bairro de um texto de endereço bruto.
+   */
+  async extractNeighborhood(rawText) {
+    if (!process.env.GEMINI_API_KEY) {
+      return null;
+    }
+
+    const prompt = `
+      Sua tarefa é extrair o NOME DO BAIRRO de um endereço escrito por um usuário de van escolar.
+      Texto: "${rawText}"
+
+      Regra:
+      - Retorne APENAS o nome do bairro (ex: Centro, Jardins, Bairro Novo).
+      - Se não houver um bairro claro, retorne "null".
+      - Não invente informações.
+      - Retorne APENAS a string pura, sem JSON e sem markdown.
+    `;
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+      const text = response.text.trim();
+      return (text.toLowerCase() === 'null') ? null : text;
+    } catch (error) {
+      console.error('[LlmService] Falha ao extrair bairro via IA:', error);
+      return null;
+    }
+  }
+
+  /**
    * Retorna a mensagem de onboarding (Guia de Comandos) para o Motorista.
    */
   getDriverOnboardingMessage(motoristaNome = 'Motorista') {

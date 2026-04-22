@@ -7,26 +7,30 @@ const ConfigController = require('../controllers/ConfigController');
 const FinanceiroController = require('../controllers/FinanceiroController');
 const MotoristaController = require('../controllers/MotoristaController');
 const AdminController = require('../controllers/AdminController');
+const AuthController = require('../controllers/AuthController');
 const adminAuth = require('../middleware/adminAuth');
+const motoristaAuth = require('../middleware/motoristaAuth');
 
-router.get('/dashboard/stats', ApiController.getDashboardStats);
-router.get('/alunos', AlunosController.listar);
-router.post('/alunos', AlunosController.criar);
-router.put('/alunos/:id', AlunosController.atualizar);
+router.post('/auth/login', AuthController.loginMotorista);
 
-router.get('/financeiro', FinanceiroController.listarDashboard);
-router.get('/financeiro/despesas', FinanceiroController.listarDespesas);
-router.post('/financeiro/despesas', FinanceiroController.criarDespesa);
-router.put('/financeiro/despesas/:id', FinanceiroController.atualizarDespesa);
-router.delete('/financeiro/despesas/:id', FinanceiroController.deletarDespesa);
-router.get('/financeiro/grafico', FinanceiroController.obterGrafico);
+router.get('/dashboard/stats', motoristaAuth, ApiController.getDashboardStats);
+router.get('/alunos', motoristaAuth, AlunosController.listar);
+router.post('/alunos', motoristaAuth, AlunosController.criar);
+router.put('/alunos/:id', motoristaAuth, AlunosController.atualizar);
 
-router.get('/config', ConfigController.obter);
-router.post('/config', ConfigController.salvar);
+router.get('/financeiro', motoristaAuth, FinanceiroController.listarDashboard);
+router.get('/financeiro/despesas', motoristaAuth, FinanceiroController.listarDespesas);
+router.post('/financeiro/despesas', motoristaAuth, FinanceiroController.criarDespesa);
+router.put('/financeiro/despesas/:id', motoristaAuth, FinanceiroController.atualizarDespesa);
+router.delete('/financeiro/despesas/:id', motoristaAuth, FinanceiroController.deletarDespesa);
+router.get('/financeiro/grafico', motoristaAuth, FinanceiroController.obterGrafico);
+
+router.get('/config', motoristaAuth, ConfigController.obter);
+router.post('/config', motoristaAuth, ConfigController.salvar);
 
 router.post('/motoristas/pagamento', MotoristaController.webhookPagamento);
 
-router.post('/viagens/calcular-rota', ViagemController.calcularRotaOtima);
+router.post('/viagens/calcular-rota', motoristaAuth, ViagemController.calcularRotaOtima);
 
 // ========== ROTAS ADMIN MASTER DASHBOARD ==========
 router.post('/admin/login', AdminController.login);

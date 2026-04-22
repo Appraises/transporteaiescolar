@@ -16,6 +16,10 @@ const Motorista = sequelize.define('Motorista', {
     allowNull: false, // ID do WhatsApp, e.g., 5511999999999@s.whatsapp.net
     unique: true
   },
+  senha_hash: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   status: {
     type: DataTypes.STRING,
     defaultValue: 'ativo',

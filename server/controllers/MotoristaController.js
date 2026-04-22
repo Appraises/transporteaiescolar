@@ -1,52 +1,110 @@
 const Motorista = require('../models/Motorista');
+const Assinatura = require('../models/Assinatura');
+const SalesService = require('../services/SalesService');
 const EvolutionService = require('../services/EvolutionService');
 const MessageVariation = require('../utils/MessageVariation');
+const { normalizePhone } = require('../utils/phoneHelper');
+
+function resolveNextOnboardingStep(motorista) {
+  if (!motorista.nome || motorista.nome === 'Aguardando') return 'AGUARDANDO_NOME';
+  if (!motorista.meta_manha && !motorista.meta_tarde && !motorista.meta_noite) return 'AGUARDANDO_LOTACAO';
+  if (!motorista.latitude || !motorista.longitude) return 'AGUARDANDO_GARAGEM';
+  if (!motorista.escola_latitude || !motorista.escola_longitude) return 'AGUARDANDO_ESCOLA';
+  if (!motorista.senha_hash) return 'AGUARDANDO_SENHA';
+  return 'CONCLUIDO';
+}
+
+function buildOnboardingMessage(motorista, step) {
+  if (step === 'AGUARDANDO_NOME') {
+    return 'Pagamento confirmado. Vamos configurar sua van.\n\n1. Qual o seu nome completo?';
+  }
+
+  if (step === 'AGUARDANDO_LOTACAO') {
+    return MessageVariation.onboardingMotorista.perguntaLotacao(motorista.nome);
+  }
+
+  if (step === 'AGUARDANDO_GARAGEM') {
+    return MessageVariation.onboardingMotorista.perguntaGaragem();
+  }
+
+  if (step === 'AGUARDANDO_ESCOLA') {
+    return MessageVariation.onboardingMotorista.perguntaEscola();
+  }
+
+  if (step === 'AGUARDANDO_SENHA') {
+    const loginPainel = motorista.telefone.split('@')[0];
+    return `Pagamento confirmado. Falta criar seu acesso ao painel VANBORA.\n\nSeu login sera seu numero: *${loginPainel}*\n\nAgora me envie a senha que voce quer usar no painel. Use pelo menos 6 caracteres.`;
+  }
+
+  return 'Pagamento confirmado. Seu cadastro ja esta completo e seu painel esta ativo.';
+}
 
 class MotoristaController {
-  
+
   /**
-   * Endpoint simulado para receber o OK de pagamento do B2B (ex: Stripe)
-   * Corpo esperado: { nome: "Joao", telefone: "5511999999999" }
+   * Recebe confirmacao de pagamento B2B e coloca o motorista no proximo passo
+   * incompleto do onboarding. Ele so vira ativo depois de criar senha do painel.
    */
   async webhookPagamento(req, res) {
     try {
-      const { nome, telefone } = req.body;
-      
+      const { nome, telefone, valor_plano } = req.body;
+
       if (!nome || !telefone) {
-        return res.status(400).json({ error: 'Nome e telefone são obrigatórios' });
+        return res.status(400).json({ error: 'Nome e telefone sao obrigatorios' });
       }
 
-      // Garante que o telefone está no formato JID da evolução
-      const phoneFormatado = telefone.includes('@s.whatsapp.net') ? telefone : `${telefone}@s.whatsapp.net`;
-
-      // Cria ou atualiza o motorista para 'ativo'
+      const phoneFormatado = normalizePhone(telefone);
       const [motorista, created] = await Motorista.findOrCreate({
         where: { telefone: phoneFormatado },
         defaults: {
-          nome: nome,
+          nome,
           telefone: phoneFormatado,
-          status: 'ativo'
+          status: 'lead',
+          venda_etapa: 'AGUARDANDO_LOTACAO',
+          boas_vindas_enviada: false
         }
       });
 
       if (!created) {
-        motorista.status = 'ativo';
-        await motorista.save();
+        motorista.nome = motorista.nome || nome;
+        if (motorista.status !== 'ativo' || !motorista.senha_hash) {
+          motorista.status = 'lead';
+        }
+        motorista.boas_vindas_enviada = false;
       }
 
-      console.log(`[Pagamento] Motorista ${nome} (${phoneFormatado}) foi ativado com sucesso.`);
+      const step = resolveNextOnboardingStep(motorista);
+      motorista.venda_etapa = step;
+      if (step === 'CONCLUIDO') {
+        motorista.status = 'ativo';
+        motorista.boas_vindas_enviada = true;
+      }
+      await motorista.save();
 
-      // -------------------------------------------------------------
-      // Tutorial de Boas-Vindas B2B (Disparado Privado para o Motorista)
-      // -------------------------------------------------------------
-      const tutorialMessage = `🚀 *BEM-VINDO À PLATAFORMA, ${nome.toUpperCase()}!*\n\nSeu pagamento foi confirmado com sucesso. Eu sou a sua nova IA de Gestão da Van Escolar.\n\nPara deixarmos tudo pronto para seus alunos hoje, você só precisa fazer *duas coisas* agora neste nosso chat privado:\n\n*1️⃣ Definir a Base (Garagem)*\nDe onde sua van sai todo dia? Mande uma mensagem assim para mim:\n👉 *garagem Sua Rua, 123, Bairro, Cidade*\n\n*2️⃣ Informar a Lotação de Cada Turno*\nQuantos alunos cabem na sua van por turno? Mande para mim:\n👉 *lotacao manha 15*\n👉 *lotacao tarde 12*\n👉 *lotacao noite 5*\n\n*(Você pode fazer um de cada vez)*\n\nPronto! Depois disso, você já pode me adicionar aos grupos do WhatsApp dos seus passageiros. Eu mesmo darei as boas-vindas a eles! 😉`;
+      await Assinatura.findOrCreate({
+        where: { motorista_id: motorista.id, status: 'ativo' },
+        defaults: {
+          motorista_id: motorista.id,
+          valor_plano: valor_plano || SalesService.MONTHLY_VALUE,
+          status: 'ativo',
+          data_inicio: new Date()
+        }
+      });
 
-      // Aciona o disparo via Evolution
-      await EvolutionService.sendMessage(phoneFormatado, tutorialMessage);
+      console.log(`[Pagamento] Motorista ${motorista.nome} (${phoneFormatado}) confirmado. Proxima etapa: ${step}.`);
+      await EvolutionService.sendMessage(phoneFormatado, buildOnboardingMessage(motorista, step));
 
-      return res.status(200).json({ 
-        message: 'Pagamento processado, motorista ativado e tutorial enviado.',
-        motorista: motorista
+      return res.status(200).json({
+        message: step === 'CONCLUIDO'
+          ? 'Pagamento processado, motorista ja estava com onboarding completo.'
+          : 'Pagamento processado, onboarding do motorista retomado.',
+        motorista: {
+          id: motorista.id,
+          nome: motorista.nome,
+          telefone: motorista.telefone,
+          status: motorista.status,
+          venda_etapa: motorista.venda_etapa
+        }
       });
 
     } catch (error) {

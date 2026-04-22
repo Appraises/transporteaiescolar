@@ -7,10 +7,11 @@ class ViagemController {
   
   async calcularRotaOtima(req, res) {
     try {
-      const { motoristaId, turno, trecho = 'ida' } = req.body;
+      const { turno, trecho = 'ida' } = req.body;
+      const motoristaId = req.motoristaId;
       
       // 1. Achar a base do Motorista (Placeholder se ele n tiver lat/lng setamos mock)
-      const motorista = await Motorista.findByPk(motoristaId || 1);
+      const motorista = await Motorista.findByPk(motoristaId);
       const coordsBase = { 
         lat: motorista?.latitude || -23.550520, 
         lng: motorista?.longitude || -46.633308 
@@ -20,6 +21,7 @@ class ViagemController {
       // Inclui os relacionamentos de endereço
       const Endereco = require('../models/Endereco');
       const alunosBrutos = await Passageiro.findAll({
+         where: { motorista_id: motoristaId },
          include: [
             { model: Endereco, as: 'enderecoIda' },
             { model: Endereco, as: 'enderecoVolta' }

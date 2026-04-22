@@ -241,8 +241,11 @@ class AdminController {
         attributes: ['id', 'nome', 'turno', 'onboarding_step']
       });
 
+      const motoristaData = motorista.toJSON();
+      delete motoristaData.senha_hash;
+
       return res.status(200).json({
-        ...motorista.toJSON(),
+        ...motoristaData,
         qtdPassageiros,
         passageiros
       });

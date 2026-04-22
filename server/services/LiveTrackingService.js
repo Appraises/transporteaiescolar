@@ -1,5 +1,6 @@
 const EvolutionService = require('./EvolutionService');
 const MessageVariation = require('../utils/MessageVariation');
+const { normalizePhone } = require('../utils/phoneHelper');
 
 // Haversine (metros)
 const haversineMeters = (lat1, lon1, lat2, lon2) => {
@@ -30,20 +31,58 @@ class LiveTrackingService {
   async processLocationUpdate(motoristaJid, lat, lng) {
     try {
       const { Motorista, Viagem, ViagemPassageiro, Passageiro, Endereco } = require('../models');
+      const normalizedJid = normalizePhone(motoristaJid);
+      const currentLat = Number(lat);
+      const currentLng = Number(lng);
+
+      if (!normalizedJid || Number.isNaN(currentLat) || Number.isNaN(currentLng)) {
+        console.log(`[GPS] Localizacao ignorada: dados invalidos. motorista=${motoristaJid || 'N/A'} lat=${lat} lng=${lng}`);
+        return;
+      }
 
       // 1. Identifica o motorista
-      const motorista = await Motorista.findOne({ where: { telefone: motoristaJid, status: 'ativo' } });
-      if (!motorista) return;
+      const motorista = await Motorista.findOne({ where: { telefone: normalizedJid, status: 'ativo' } });
+      if (!motorista) {
+        console.log(`[GPS] Motorista nao encontrado ou inativo para ${normalizedJid}. Ignorando localizacao.`);
+        return;
+      }
 
       const raioNotificacao = motorista.raio_notificacao || 2500;
 
-      // 2. Busca viagem ativa (em_andamento) do motorista
+      // 2. Busca viagem ativa do motorista. Se a rota ja foi gerada, a primeira
+      // localizacao do motorista inicia automaticamente o rastreamento.
       const hojeStr = new Date().toISOString().split('T')[0];
-      const viagem = await Viagem.findOne({
-        where: { motorista_id: motorista.id, data: hojeStr, status: 'em_andamento' }
+      let viagem = await Viagem.findOne({
+        where: { motorista_id: motorista.id, data: hojeStr, status: 'em_andamento' },
+        order: [['updatedAt', 'DESC']]
       });
 
-      if (!viagem || !viagem.trecho_ativo) return;
+      if (!viagem) {
+        viagem = await Viagem.findOne({
+          where: { motorista_id: motorista.id, data: hojeStr, status: 'rota_gerada' },
+          order: [['updatedAt', 'DESC']]
+        });
+
+        if (viagem) {
+          viagem.status = 'em_andamento';
+          viagem.trecho_ativo = viagem.trecho_ativo || await this._inferirTrechoInicial(viagem.id, ViagemPassageiro);
+          viagem.parada_atual = viagem.parada_atual || 1;
+          await viagem.save();
+          console.log(`[GPS] Viagem #${viagem.id} iniciada automaticamente no trecho ${viagem.trecho_ativo} pela primeira localizacao de ${motorista.nome}.`);
+        }
+      }
+
+      if (!viagem) {
+        console.log(`[GPS] Nenhuma viagem em andamento ou rota gerada hoje para ${motorista.nome} (${normalizedJid}).`);
+        return;
+      }
+
+      if (!viagem.trecho_ativo) {
+        viagem.trecho_ativo = await this._inferirTrechoInicial(viagem.id, ViagemPassageiro);
+        viagem.parada_atual = viagem.parada_atual || 1;
+        await viagem.save();
+        console.log(`[GPS] Viagem #${viagem.id} estava sem trecho ativo; assumindo ${viagem.trecho_ativo}.`);
+      }
 
       const trecho = viagem.trecho_ativo; // 'ida' ou 'volta'
       const statusField = trecho === 'ida' ? 'status_ida' : 'status_volta';
@@ -79,9 +118,12 @@ class LiveTrackingService {
       const latPass = endAtual?.latitude || passAtual.latitude;
       const lngPass = endAtual?.longitude || passAtual.longitude;
 
-      if (!latPass || !lngPass) return;
+      if (latPass === undefined || latPass === null || lngPass === undefined || lngPass === null) {
+        console.log(`[GPS] Passageiro ${passAtual.nome} sem coordenadas para o trecho ${trecho}.`);
+        return;
+      }
 
-      const distanciaAtual = haversineMeters(lat, lng, latPass, lngPass);
+      const distanciaAtual = haversineMeters(currentLat, currentLng, latPass, lngPass);
 
       console.log(`[GPS] Motorista ${motorista.nome} → ${passAtual.nome}: ${Math.round(distanciaAtual)}m (raio coleta: ${RAIO_COLETA}m, raio notif: ${raioNotificacao}m)`);
 
@@ -135,7 +177,7 @@ class LiveTrackingService {
 
       // 6. Proximidade da Escola/Faculdade (apenas no trecho IDA)
       if (trecho === 'ida' && motorista.escola_latitude && motorista.escola_longitude) {
-        const distanciaEscola = haversineMeters(lat, lng, motorista.escola_latitude, motorista.escola_longitude);
+        const distanciaEscola = haversineMeters(currentLat, currentLng, motorista.escola_latitude, motorista.escola_longitude);
         
         if (distanciaEscola <= raioNotificacao) {
           const { GrupoMotorista } = require('../models');
@@ -154,6 +196,17 @@ class LiveTrackingService {
     } catch (error) {
       console.error('[LiveTracking] Erro ao processar location update:', error.message);
     }
+  }
+
+  async _inferirTrechoInicial(viagemId, ViagemPassageiro) {
+    const registros = await ViagemPassageiro.findAll({ where: { viagem_id: viagemId } });
+    const statusAtivo = new Set(['confirmado', 'em_rota']);
+    const temIda = registros.some(r => statusAtivo.has(r.status_ida));
+    const temVolta = registros.some(r => statusAtivo.has(r.status_volta));
+
+    if (temIda) return 'ida';
+    if (temVolta) return 'volta';
+    return 'ida';
   }
 
   /**

@@ -30,6 +30,22 @@ const Viagem = sequelize.define('Viagem', {
   trecho_ativo: {
     type: DataTypes.STRING, // 'ida' ou 'volta' - qual trecho está sendo rastreado
     allowNull: true,
+  },
+  rota_ida_enviada: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  rota_volta_enviada: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  pedido_gps_enviado: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  turno_livre_enviado: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   }
 }, {
   tableName: 'viagens',

@@ -1,15 +1,30 @@
 const Passageiro = require('../models/Passageiro');
 const Financeiro = require('../models/Financeiro');
 const Viagem = require('../models/Viagem');
+const Despesa = require('../models/Despesa');
+const { Op } = require('sequelize');
 
 class ApiController {
   
   async getDashboardStats(req, res) {
     try {
-      // Mocked logics until full SQLite seed is done, but queried securely.
-      const ativosCount = await Passageiro.count();
-      const mensalidades = await Financeiro.findAll({ where: { status_pagamento: 'pago' } });
-      const despesas = await require('../models/Despesa').findAll();
+      const motoristaId = req.motoristaId;
+      const passageiros = await Passageiro.findAll({
+        where: { motorista_id: motoristaId },
+        attributes: ['id']
+      });
+      const passageiroIds = passageiros.map(p => p.id);
+      const passageiroWhere = passageiroIds.length > 0
+        ? { passageiro_id: { [Op.in]: passageiroIds } }
+        : { passageiro_id: null };
+
+      const ativosCount = await Passageiro.count({
+        where: { motorista_id: motoristaId, onboarding_step: 'CONCLUIDO' }
+      });
+      const mensalidades = await Financeiro.findAll({
+        where: { ...passageiroWhere, status_pagamento: 'pago' }
+      });
+      const despesas = await Despesa.findAll({ where: { motorista_id: motoristaId } });
 
       let receitaBruta = 0;
       mensalidades.forEach(m => receitaBruta += m.valor_mensalidade);
@@ -21,9 +36,16 @@ class ApiController {
         lucroMes: receitaBruta - custosTotais,
         receitaBruta: receitaBruta,
         custosTotais: custosTotais,
-        inadimplentes: await Financeiro.count({ where: { status_pagamento: 'atrasado' } }),
+        inadimplentes: await Financeiro.count({
+          where: { ...passageiroWhere, status_pagamento: 'atrasado' }
+        }),
         ativos: ativosCount || 0,
-        viagensHoje: 0
+        viagensHoje: await Viagem.count({
+          where: {
+            motorista_id: motoristaId,
+            data: new Date().toISOString().split('T')[0]
+          }
+        })
       };
 
       res.status(200).json(stats);

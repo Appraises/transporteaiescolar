@@ -59,6 +59,27 @@ const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + mi
 
 class EvolutionService {
   
+  sanitizeOutgoingText(text) {
+      if (!text) return '';
+
+      let cleaned = '';
+      for (let i = 0; i < text.length; i++) {
+          const code = text.charCodeAt(i);
+          if (code >= 0xD800 && code <= 0xDBFF) {
+              const next = text.charCodeAt(i + 1);
+              if (next >= 0xDC00 && next <= 0xDFFF) {
+                  cleaned += text[i] + text[i + 1];
+                  i++;
+              }
+              continue;
+          }
+          if (code >= 0xDC00 && code <= 0xDFFF) continue;
+          cleaned += text[i];
+      }
+
+      return cleaned.normalize('NFC');
+  }
+
   /**
    * Humaniza um texto modificando-o sutilmente para nunca gerar idêntico
    */
@@ -71,7 +92,10 @@ class EvolutionService {
               result = result.replace(original, replacement);
           }
       }
-      
+
+      return this.sanitizeOutgoingText(result);
+      /*
+       
       // Rotaciona os emojis para enganar o Hash 
       const mainEmoji = EMOJI_VARIATIONS[randomInt(0, EMOJI_VARIATIONS.length - 1)];
       result = result.replace(/[🚐🚗📚✌️👍👊✅✔]/, mainEmoji);
@@ -84,6 +108,7 @@ class EvolutionService {
           chars.splice(pos, 0, ZERO_WIDTH_SPACE);
       }
       return chars.join('');
+      */
   }
 
   /**
@@ -129,9 +154,11 @@ class EvolutionService {
       return true;
     }
 
+    let finalMessage = text;
+
     try {
       // 1. Torna a string única e imune a flags de spam da Meta
-      const finalMessage = this.humanizeMessage(text);
+      finalMessage = this.humanizeMessage(text);
       
       // 2. Aciona o "Digitando..." no celular do passageiro
       await this.sendPresence(phoneId, 'composing');
@@ -140,7 +167,7 @@ class EvolutionService {
       const charCount = finalMessage.length;
       const charsPerSec = randomInt(6, 12);
       const rawTypingMs = (charCount / charsPerSec) * 1000;
-      const typingMs = Math.max(1500, Math.min(rawTypingMs, 15000)); // Reduzido para não demorar demais no onboarding
+      const typingMs = Math.max(1200, Math.min(rawTypingMs, 5000)); // Reduzido para no máximo 5s para evitar perda de mensagens em restart
       
       console.log(`[Evolution] Simulando Digitação -> ${typingMs} ms (${charCount} chars)`);
       await delay(typingMs);
@@ -167,8 +194,9 @@ class EvolutionService {
     } catch (error) {
       console.error('[EvolutionService] Erro brutal de disparo:', error.message);
       if (error.response) {
-          console.error('[EvolutionService] URL do erro:', url);
           console.error('[EvolutionService] Detalhes do erro da API:', JSON.stringify(error.response.data));
+          console.error('[EvolutionService] Status:', error.response.status);
+          console.error('[EvolutionService] Identificador (Number):', this.formatNumber(phoneId));
           console.error('[EvolutionService] Payload enviado:', JSON.stringify({
             number: this.formatNumber(phoneId),
             text: finalMessage

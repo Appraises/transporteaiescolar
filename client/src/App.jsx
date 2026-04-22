@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { Home, Users, DollarSign, Settings, LogOut, Menu, Bus, Moon, Sun } from 'lucide-react';
 import DashboardPage from './pages/Dashboard';
@@ -11,6 +12,11 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import AdminMotoristaDetail from './pages/AdminMotoristaDetail';
 import './index.css';
+
+const savedMotoristaToken = localStorage.getItem('motoristaToken');
+if (savedMotoristaToken) {
+    axios.defaults.headers.common.Authorization = `Bearer ${savedMotoristaToken}`;
+}
 
 const Layout = ({ children, logout, theme, toggleTheme }) => {
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -182,7 +188,7 @@ const AdminProtectedRoute = ({ children }) => {
 };
 
 function App() {
-    const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+    const [isAuthenticated, setIsAuthenticated] = React.useState(() => Boolean(localStorage.getItem('motoristaToken')));
     const [theme, setTheme] = React.useState(localStorage.getItem('theme') || 'light');
 
     React.useEffect(() => {
@@ -190,18 +196,39 @@ function App() {
         localStorage.setItem('theme', theme);
     }, [theme]);
 
+    React.useEffect(() => {
+        const token = localStorage.getItem('motoristaToken');
+        if (token) {
+            axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+        } else {
+            delete axios.defaults.headers.common.Authorization;
+        }
+    }, [isAuthenticated]);
+
     const toggleTheme = () => {
         setTheme(prev => prev === 'light' ? 'dark' : 'light');
     };
 
-    const logout = () => setIsAuthenticated(false);
+    const handleLogin = ({ token, motorista }) => {
+        localStorage.setItem('motoristaToken', token);
+        localStorage.setItem('motoristaUser', JSON.stringify(motorista));
+        axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+        setIsAuthenticated(true);
+    };
+
+    const logout = () => {
+        localStorage.removeItem('motoristaToken');
+        localStorage.removeItem('motoristaUser');
+        delete axios.defaults.headers.common.Authorization;
+        setIsAuthenticated(false);
+    };
 
     return (
         <Router>
             <Routes>
                 <Route path="/landing" element={<LandingPage />} />
                 <Route path="/login" element={
-                    isAuthenticated ? <Navigate to="/" /> : <LoginPage onLogin={() => setIsAuthenticated(true)} />
+                    isAuthenticated ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />
                 } />
                 
                 {/* Rotas Admin Master */}
