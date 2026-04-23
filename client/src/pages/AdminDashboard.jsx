@@ -35,7 +35,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [evolutionLoading, setEvolutionLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [novoMotorista, setNovoMotorista] = useState({ nome: '', telefone: '', valorPlano: '99.90' });
+  const [novoMotorista, setNovoMotorista] = useState({ nome: '', telefone: '', senha: '', valorPlano: '99.90' });
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [logsContent, setLogsContent] = useState('');
   const [logsLoading, setLogsLoading] = useState(false);
@@ -197,9 +197,15 @@ const AdminDashboard = () => {
 
   const handleAddMotorista = async (e) => {
     if (e) e.preventDefault();
+    const senhaInicial = novoMotorista.senha.trim();
     
-    if (!novoMotorista.nome || !novoMotorista.telefone) {
-      alert('Nome e telefone são obrigatórios');
+    if (!novoMotorista.nome || !novoMotorista.telefone || !senhaInicial) {
+      alert('Nome, telefone e senha são obrigatórios');
+      return;
+    }
+
+    if (senhaInicial.length < 6) {
+      alert('A senha precisa ter pelo menos 6 caracteres');
       return;
     }
 
@@ -208,11 +214,12 @@ const AdminDashboard = () => {
       await axios.post('/api/admin/motoristas', {
         nome: novoMotorista.nome,
         telefone: novoMotorista.telefone,
+        senha: senhaInicial,
         valor_plano: parseFloat(novoMotorista.valorPlano || '99.90')
       }, config);
       
       setShowAddForm(false);
-      setNovoMotorista({ nome: '', telefone: '', valorPlano: '99.90' });
+      setNovoMotorista({ nome: '', telefone: '', senha: '', valorPlano: '99.90' });
       fetchAll();
     } catch (e) {
       alert(e.response?.data?.error || 'Erro ao adicionar motorista');
@@ -404,7 +411,7 @@ const AdminDashboard = () => {
 
          {showAddForm && (
            <div className="p-6 border-b border-[var(--color-border)] bg-[var(--color-surface-hover)] animate-in slide-in-from-top-2 duration-300">
-             <form onSubmit={handleAddMotorista} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+             <form onSubmit={handleAddMotorista} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
                 <div className="flex flex-col gap-1.5">
                    <label className="text-[10px] font-black uppercase text-slate-500 ml-1">Nome do Motorista</label>
                    <input 
@@ -416,7 +423,7 @@ const AdminDashboard = () => {
                      required
                    />
                 </div>
-                <div className="flex flex-col gap-1.5">
+                 <div className="flex flex-col gap-1.5">
                    <label className="text-[10px] font-black uppercase text-slate-500 ml-1">WhatsApp (DDD + Número)</label>
                    <input 
                      type="text" 
@@ -424,6 +431,18 @@ const AdminDashboard = () => {
                      className="search-input w-full"
                      value={novoMotorista.telefone}
                      onChange={e => setNovoMotorista({...novoMotorista, telefone: e.target.value})}
+                     required
+                   />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                   <label className="text-[10px] font-black uppercase text-slate-500 ml-1">Senha Inicial</label>
+                   <input
+                     type="password"
+                     placeholder="Mín. 6 caracteres"
+                     className="search-input w-full"
+                     value={novoMotorista.senha}
+                     onChange={e => setNovoMotorista({...novoMotorista, senha: e.target.value})}
+                     minLength={6}
                      required
                    />
                 </div>
@@ -440,7 +459,7 @@ const AdminDashboard = () => {
                 </div>
                 <button 
                   type="submit"
-                  className="bg-emerald-600 text-white font-bold h-[38px] rounded-xl hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2"
+                  className="bg-emerald-600 text-white font-bold h-[38px] rounded-xl hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 md:col-span-2 xl:col-span-1 whitespace-nowrap"
                 >
                    <CheckCircle2 size={18} /> Confirmar Cadastro
                 </button>

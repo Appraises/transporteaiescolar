@@ -8,6 +8,7 @@ const Config = require('./Config');
 const GrupoMotorista = require('./GrupoMotorista');
 const Despesa = require('./Despesa');
 const Assinatura = require('./Assinatura');
+const PollDispatch = require('./PollDispatch');
 
 // Relacionamentos
 
@@ -60,5 +61,6 @@ module.exports = {
   GrupoMotorista,
   Despesa,
   Endereco,
-  Assinatura
+  Assinatura,
+  PollDispatch
 };

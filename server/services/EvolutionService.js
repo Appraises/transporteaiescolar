@@ -1,61 +1,50 @@
 const axios = require('axios');
 
-// Dicionário Sintático de Substituições em tempo-real (Humanização Lexical e Anti-SPAM Meta)
-const SYNONYMS = {
-    // Saudações e Cumprimentos
-    'Olá': ['Oi', 'Fala aí', 'Opa', 'Saudações', 'E aí', 'Fala'],
-    'olá': ['oi', 'fala aí', 'opa', 'e aí'],
-    'Tudo bem?': ['Tudo joia?', 'Tudo certo?', 'Tudo em paz?', 'Como vão as coisas?'],
-    'tudo bem?': ['tudo joia?', 'tudo certo?', 'tudo na paz?'],
-    'Valeu': ['Obrigado', 'Agradeço', 'Muito obrigado', 'Um abraço', 'Tamo junto', 'Valeu demais'],
-    'valeu': ['obrigado', 'agradeço', 'um abraço', 'tamo junto'],
-    
-    // Status e Confirmações
-    'Entendido': ['Anotado', 'Compreendido', 'Registrado', 'Copiado'],
-    'entendido': ['anotado', 'compreendido', 'registrado', 'copiado'],
-    'Anotado': ['Registrado', 'Salvo no sistema', 'Marcado'],
-    'anotado': ['registrado', 'salvo', 'marcado'],
-    'Feito': ['Prontinho', 'Concluído', 'Resolvido', 'Pronto'],
-    'feito': ['prontinho', 'concluído', 'resolvido'],
-    'Beleza': ['Maravilha', 'Perfeito', 'Ótimo', 'Show'],
-    'beleza': ['maravilha', 'perfeito', 'ótimo', 'show'],
-    'Tudo certo': ['Tudo OK', 'Tudo pronto', 'Maravilha'],
-    'tudo certo': ['tudo ok', 'tudo pronto', 'maravilha'],
-
-    // Termos Financeiros (Gênero garantido)
-    'mensalidade': ['fatura', 'parcela', 'cobrança', 'assinatura'], // Femininos pra "a mensalidade" funcionar
-    'Mensalidade': ['Fatura', 'Parcela', 'Cobrança', 'Assinatura'],
-    'comprovante': ['recibo', 'documento', 'comprovante do pix'], // Masculinos pra "o comprovante" funcionar
-    'Comprovante': ['Recibo', 'Documento'],
-    'atrasado': ['pendente', 'vencido'], // "está atrasado" -> "está pendente"
-    'Pix': ['pagamento', 'PIX', 'depósito'], // "o Pix" -> "o pagamento"
-    'PIX': ['PAGAMENTO', 'DEPÓSITO'],
-    
-    // Termos de Logística e Lugares
-    'garagem': ['base', 'residência', 'casa'], // Femininos pra "a garagem"
-    'Garagem': ['Base', 'Residência', 'Casa'],
-    'escola': ['instituição', 'faculdade'], // Femininos pra "na escola"
-    'Escola': ['Instituição', 'Faculdade'],
-    
-    // Entidades e Pessoas
-    'robô': ['assistente', 'sistema', 'bot', 'software'], // Masculinos pra "o robô"
-    'Robô': ['Assistente', 'Sistema', 'Bot', 'Software'],
-    'chefe': ['amigo', 'parceiro', 'mestre', 'campeão', 'comandante'], // Masculinos
-    'Chefe': ['Amigo', 'Parceiro', 'Mestre', 'Campeão', 'Comandante'],
-    'passageiro': ['aluno', 'cliente', 'estudante'],
-    'passageiros': ['alunos', 'clientes', 'estudantes'],
-    'Passageiros': ['Alunos', 'Clientes', 'Estudantes'],
-    
-    // Advérbios 
-    'hoje': ['no dia de hoje', 'nesta data', 'agora mesmo', 'hoje mesmo'],
-    'agora': ['já', 'nesse momento', 'imediatamente']
-};
-const EMOJI_VARIATIONS = ['🚐', '🚗', '📚', '✌️', '👍', '👊', '✅', '✔'];
-const ZERO_WIDTH_SPACE = '\u200B';
-
 // Utilitários de atraso matemático
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const WORD_CHARS = 'A-Za-z0-9_À-ÖØ-öø-ÿ';
+
+// Lista revisada: mantém sinônimos ativos, mas só com trocas que preservam
+// sentido, concordância e contexto nos templates atuais.
+const ACTIVE_SYNONYMS = {
+    'Olá': ['Oi', 'Opa'],
+    'olá': ['oi', 'opa'],
+    'Ola': ['Oi', 'Opa'],
+    'ola': ['oi', 'opa'],
+    'Tudo bem?': ['Tudo certo?', 'Tudo joia?'],
+    'tudo bem?': ['tudo certo?', 'tudo joia?'],
+    'Anotado!': ['Registrado!', 'Salvo!'],
+    'Entendido!': ['Combinado!', 'Registrado!'],
+    'Feito!': ['Pronto!', 'Tudo pronto!'],
+    'Perfeito!': ['Ótimo!', 'Tudo certo!'],
+    'Muito obrigado': ['Obrigado', 'Valeu'],
+    'Obrigado': ['Valeu', 'Muito obrigado'],
+    'Quando puder': ['Assim que puder', 'Quando conseguir'],
+    'aqui mesmo': ['por aqui', 'neste chat'],
+    'por aqui': ['aqui no chat', 'neste chat'],
+    'comprovante do Pix': ['comprovante do PIX', 'comprovante de pagamento'],
+    'comprovante do PIX': ['comprovante do Pix', 'comprovante de pagamento'],
+    'pagamento registrado': ['pagamento confirmado', 'pagamento salvo'],
+    'Pagamento registrado': ['Pagamento confirmado', 'Pagamento salvo'],
+    'endereço completo': ['endereço com rua, número e bairro', 'endereço com todos os detalhes'],
+    'endereco completo': ['endereço com rua, número e bairro', 'endereço com todos os detalhes'],
+    'localização em tempo real': ['localização ao vivo', 'localização em tempo real'],
+    'localizacao em tempo real': ['localização ao vivo', 'localização em tempo real'],
+    'Turno livre': ['Sem rota nesse turno', 'Turno sem passageiros confirmados']
+};
+
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function synonymRegex(original) {
+    const startsWithWord = new RegExp(`^[${WORD_CHARS}]`).test(original);
+    const endsWithWord = new RegExp(`[${WORD_CHARS}]$`).test(original);
+    const prefix = startsWithWord ? `(?<![${WORD_CHARS}])` : '';
+    const suffix = endsWithWord ? `(?![${WORD_CHARS}])` : '';
+    return new RegExp(`${prefix}${escapeRegExp(original)}${suffix}`, 'u');
+}
 
 class EvolutionService {
   
@@ -85,30 +74,16 @@ class EvolutionService {
    */
   humanizeMessage(text) {
       let result = text;
-      // Trança Sinônimos Aleatoriamente
-      for (const [original, alternatives] of Object.entries(SYNONYMS)) {
-          if (result.includes(original) && Math.random() > 0.4) {
+      // Aplica sinônimos revisados aleatoriamente.
+      for (const [original, alternatives] of Object.entries(ACTIVE_SYNONYMS)) {
+          const pattern = synonymRegex(original);
+          if (pattern.test(result) && Math.random() > 0.4) {
               const replacement = alternatives[randomInt(0, alternatives.length - 1)];
-              result = result.replace(original, replacement);
+              result = result.replace(pattern, replacement);
           }
       }
 
       return this.sanitizeOutgoingText(result);
-      /*
-       
-      // Rotaciona os emojis para enganar o Hash 
-      const mainEmoji = EMOJI_VARIATIONS[randomInt(0, EMOJI_VARIATIONS.length - 1)];
-      result = result.replace(/[🚐🚗📚✌️👍👊✅✔]/, mainEmoji);
-
-      // Injeta espaços invisiveis (Zero Width) no meio da string
-      const chars = result.split('');
-      const insertCount = randomInt(2, 4);
-      for (let i = 0; i < insertCount; i++) {
-          const pos = randomInt(5, chars.length - 5>0?chars.length - 5:chars.length);
-          chars.splice(pos, 0, ZERO_WIDTH_SPACE);
-      }
-      return chars.join('');
-      */
   }
 
   /**

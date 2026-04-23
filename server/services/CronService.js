@@ -291,6 +291,18 @@ class CronService {
     }).format(new Date());
   }
 
+  _dataAtualSaoPaulo() {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date());
+
+    const get = (type) => parts.find(part => part.type === type)?.value;
+    return `${get('year')}-${get('month')}-${get('day')}`;
+  }
+
   async _getConfigValue(chave, motoristaId, fallback) {
     const configMotorista = await Config.findOne({ where: { chave, motorista_id: motoristaId } });
     if (configMotorista?.valor) return configMotorista.valor;
@@ -316,9 +328,8 @@ class CronService {
     activeJobs[`${turnoNome}_enquete`] = cron.schedule(cronEnquete, async () => {
       const horaAtual = this._horaAtualSaoPaulo();
       
-      const { Motorista, GrupoMotorista } = require('../models');
-      const hoje = new Date();
-      const hojeStr = hoje.toISOString().split('T')[0];
+      const { Motorista, GrupoMotorista, PollDispatch } = require('../models');
+      const hojeStr = this._dataAtualSaoPaulo();
 
       // Busca grupos e depois encontra o motorista
       const grupos = await GrupoMotorista.findAll();
@@ -344,8 +355,32 @@ class CronService {
              }
          }
 
-         console.log(`[Cron] Acionando Enquete de ${turnoNome} para ${m.nome} (${horaAtual})`);
-         await PollService.dispararEnquete(turnoNome, grupo.group_jid);
+         const grupoLabel = grupo.nome_grupo
+            ? `${grupo.nome_grupo} (${grupo.group_jid})`
+            : grupo.group_jid;
+
+         let dispatch;
+         try {
+            dispatch = await PollDispatch.create({
+               data: hojeStr,
+               turno: turnoNome,
+               motorista_id: m.id,
+               group_jid: grupo.group_jid,
+               status: 'enviando'
+            });
+         } catch (err) {
+            if (err.name === 'SequelizeUniqueConstraintError') {
+               console.log(`[Cron] Enquete de ${turnoNome} ja registrada hoje para ${m.nome} no grupo ${grupoLabel}. Pulando duplicata.`);
+               continue;
+            }
+            throw err;
+         }
+
+         console.log(`[Cron] Acionando Enquete de ${turnoNome} para ${m.nome} no grupo ${grupoLabel} (${horaAtual})`);
+         const enviada = await PollService.dispararEnquete(turnoNome, grupo.group_jid);
+         dispatch.status = enviada ? 'enviada' : 'erro';
+         dispatch.erro = enviada ? null : 'PollService retornou false';
+         await dispatch.save();
       }
     }, { timezone: "America/Sao_Paulo" });
 

@@ -14,6 +14,7 @@ const Config = require('../models/Config');
 const Endereco = require('../models/Endereco');
 const Despesa = require('../models/Despesa');
 const { normalizePhone } = require('../utils/phoneHelper');
+const { hashPassword } = require('../utils/passwordHash');
 const CronService = require('../services/CronService');
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'gestor_van_admin_secret_2026';
@@ -146,10 +147,15 @@ class AdminController {
    */
   async criarMotorista(req, res) {
     try {
-      const { nome, telefone, valor_plano } = req.body;
+      const { nome, telefone, valor_plano, senha } = req.body;
+      const senhaInicial = String(senha || '').trim();
 
-      if (!nome || !telefone) {
-        return res.status(400).json({ error: 'Nome e telefone são obrigatórios.' });
+      if (!nome || !telefone || !senhaInicial) {
+        return res.status(400).json({ error: 'Nome, telefone e senha são obrigatórios.' });
+      }
+
+      if (senhaInicial.length < 6) {
+        return res.status(400).json({ error: 'A senha precisa ter pelo menos 6 caracteres.' });
       }
 
       // Adiciona sufixo e código do país (55) se necessário
@@ -158,23 +164,37 @@ class AdminController {
       // Verifica se já existe
       const jaExiste = await Motorista.findOne({ where: { telefone: phoneId } });
       if (jaExiste) {
-        if (jaExiste.status === 'lead') {
-          // "Promove" o lead para ativo
+        if (jaExiste.status === 'lead' || !jaExiste.senha_hash) {
+          // "Promove" o lead ou corrige motorista ativo antigo sem senha.
           jaExiste.nome = nome;
           jaExiste.status = 'ativo';
+          jaExiste.venda_etapa = 'CONCLUIDO';
+          jaExiste.senha_hash = hashPassword(senhaInicial);
+          jaExiste.boas_vindas_enviada = true;
           await jaExiste.save();
           
-          if (valor_plano) {
-            const Assinatura = require('../models/Assinatura');
-            await Assinatura.create({
+          await Assinatura.findOrCreate({
+            where: { motorista_id: jaExiste.id, status: 'ativo' },
+            defaults: {
               motorista_id: jaExiste.id,
-              valor_plano,
+              valor_plano: valor_plano || 99.90,
               status: 'ativo',
               data_inicio: new Date()
-            });
+            }
+          });
+
+          try {
+            await EvolutionService.sendMessage(
+              jaExiste.telefone,
+              `Acesso ao painel VANBORA criado.\n\nLogin: ${jaExiste.telefone.split('@')[0]}\nSenha inicial: ${senhaInicial}\n\nPainel: ${process.env.PAINEL_URL || process.env.FRONTEND_URL || 'http://localhost:5173/login'}`
+            );
+          } catch (err) {
+            console.error('[Admin] Falha ao enviar acesso do painel:', err.message);
           }
           
-          return res.status(200).json(jaExiste);
+          const motoristaData = jaExiste.toJSON();
+          delete motoristaData.senha_hash;
+          return res.status(200).json(motoristaData);
         }
         return res.status(400).json({ error: 'Motorista com este telefone já existe e já está ativo.' });
       }
@@ -182,7 +202,10 @@ class AdminController {
       const novoMotorista = await Motorista.create({
         nome,
         telefone: phoneId,
-        status: 'ativo'
+        status: 'ativo',
+        venda_etapa: 'CONCLUIDO',
+        senha_hash: hashPassword(senhaInicial),
+        boas_vindas_enviada: true
       });
 
       // Cria a assinatura ativa
@@ -194,15 +217,12 @@ class AdminController {
         data_inicio: new Date()
       });
 
-      // --- ONBOARDING PROATIVO ---
-      // Como o motorista acabou de ser criado/pago, mandamos o tutorial imediatamente
       try {
-        const welcomeMsg = LlmService.getDriverOnboardingMessage(novoMotorista.nome);
-        await EvolutionService.sendMessage(novoMotorista.telefone, welcomeMsg);
-        
-        // Marca como enviado para não repetir no primeiro 'Oi' (apenas se for General Chat depois)
-        novoMotorista.boas_vindas_enviada = true;
-        await novoMotorista.save();
+        await EvolutionService.sendMessage(
+          novoMotorista.telefone,
+          `Acesso ao painel VANBORA criado.\n\nLogin: ${novoMotorista.telefone.split('@')[0]}\nSenha inicial: ${senhaInicial}\n\nPainel: ${process.env.PAINEL_URL || process.env.FRONTEND_URL || 'http://localhost:5173/login'}`
+        );
+        await EvolutionService.sendMessage(novoMotorista.telefone, LlmService.getDriverOnboardingMessage(novoMotorista.nome));
         
         console.log(`[Admin] Onboarding proativo disparado para ${novoMotorista.nome} (${novoMotorista.telefone})`);
       } catch (err) {
@@ -210,7 +230,9 @@ class AdminController {
         // Não barramos a resposta de sucesso do HTTP se apenas o WhatsApp falhar
       }
 
-      return res.status(201).json({ message: 'Motorista criado com sucesso!', motorista: novoMotorista });
+      const motoristaData = novoMotorista.toJSON();
+      delete motoristaData.senha_hash;
+      return res.status(201).json({ message: 'Motorista criado com sucesso!', motorista: motoristaData });
     } catch (error) {
       console.error('[AdminController] Erro ao criar motorista:', error);
       return res.status(500).json({ error: 'Erro ao criar motorista.' });

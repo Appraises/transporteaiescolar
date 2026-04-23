@@ -37,10 +37,13 @@ class PollService {
           'apikey': process.env.EVOLUTION_API_TOKEN
         }
       });
-      console.log(`[PollService] Enquete do turno ${turno} disparada com sucesso!`);
+      console.log(`[PollService] Enquete do turno ${turno} disparada com sucesso para ${groupId}!`);
       return true;
     } catch (error) {
-      console.error('[PollService] Erro ao disparar enquete:', error.message);
+      const responseInfo = error.response
+        ? `status ${error.response.status} ${JSON.stringify(error.response.data || {})}`
+        : error.message;
+      console.error(`[PollService] Erro ao disparar enquete para ${groupId}:`, responseInfo);
       return false;
     }
   }

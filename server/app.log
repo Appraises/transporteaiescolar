@@ -5140,3 +5140,762 @@
 13:53:49 [LOG] [Webhook] Evento recebido: presence.update
 13:54:00 [LOG] [Webhook] Evento recebido: presence.update
 13:54:36 [LOG] [Webhook] Evento recebido: presence.update
+14:14:41 [LOG] [Webhook] Evento recebido: presence.update
+14:16:02 [LOG] [Webhook] Evento recebido: presence.update
+14:18:04 [LOG] [Webhook] Evento recebido: presence.update
+14:20:16 [LOG] [Webhook] Evento recebido: presence.update
+14:21:28 [LOG] [Webhook] Evento recebido: presence.update
+14:23:14 [LOG] [Webhook] Evento recebido: presence.update
+14:23:26 [LOG] [Webhook] Evento recebido: presence.update
+14:24:51 [LOG] [Webhook] Evento recebido: presence.update
+14:25:07 [LOG] [Webhook] Evento recebido: presence.update
+14:25:48 [LOG] [Webhook] Evento recebido: presence.update
+14:28:56 [LOG] [Webhook] Evento recebido: presence.update
+14:31:50 [LOG] [Webhook] Evento recebido: presence.update
+14:31:57 [LOG] [Webhook] Evento recebido: contacts.update
+14:32:43 [LOG] [Webhook] Evento recebido: presence.update
+14:34:35 [LOG] [Webhook] Evento recebido: presence.update
+14:36:58 [LOG] [Webhook] Evento recebido: presence.update
+14:38:13 [LOG] [Webhook] Evento recebido: presence.update
+14:38:33 [LOG] [Webhook] Evento recebido: presence.update
+14:39:01 [LOG] [Webhook] Evento recebido: presence.update
+14:40:39 [LOG] [Webhook] Evento recebido: presence.update
+14:41:08 [LOG] [Webhook] Evento recebido: presence.update
+14:48:23 [LOG] [Webhook] Evento recebido: presence.update
+14:48:55 [LOG] [Webhook] Evento recebido: presence.update
+14:54:30 [LOG] [Webhook] Evento recebido: presence.update
+14:54:48 [LOG] [Webhook] Evento recebido: presence.update
+14:59:30 [LOG] [Webhook] Evento recebido: presence.update
+15:00:04 [LOG] [Webhook] Evento recebido: presence.update
+15:12:48 [LOG] [Webhook] Evento recebido: presence.update
+15:13:09 [LOG] [Webhook] Evento recebido: presence.update
+15:14:18 [LOG] [Webhook] Evento recebido: presence.update
+15:14:53 [LOG] [Webhook] Evento recebido: presence.update
+15:25:35 [LOG] [Webhook] Evento recebido: presence.update
+15:26:18 [LOG] [Webhook] Evento recebido: presence.update
+15:27:06 [LOG] [Webhook] Evento recebido: presence.update
+15:27:35 [LOG] [Webhook] Evento recebido: presence.update
+15:36:44 [LOG] [Webhook] Evento recebido: connection.update
+15:36:44 [LOG] [Webhook] Evento recebido: connection.update
+15:36:47 [LOG] [Webhook] Evento recebido: connection.update
+15:36:47 [LOG] [Webhook] Evento recebido: connection.update
+16:31:49 [LOG] [Webhook] Evento recebido: connection.update
+16:31:49 [LOG] [Webhook] Evento recebido: connection.update
+16:31:50 [LOG] [Webhook] Evento recebido: connection.update
+16:31:50 [LOG] [Webhook] Evento recebido: connection.update
+17:00:00 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:00 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:00 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:01 [ERROR] [PollService] Erro ao disparar enquete: Request failed with status code 400
+17:00:01 [ERROR] [PollService] Erro ao disparar enquete: Request failed with status code 400
+17:00:01 [ERROR] [PollService] Erro ao disparar enquete: Request failed with status code 400
+17:00:01 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:01 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:01 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:03 [LOG] [PollService] Enquete do turno noite disparada com sucesso!
+17:00:03 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:03 [LOG] [Webhook] Evento recebido: send.message
+17:00:04 [LOG] [Webhook] Evento recebido: messages.update
+17:00:04 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:00:04 [LOG] [Webhook] Evento recebido: messages.update
+17:00:04 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:00:04 [LOG] [Webhook] Evento recebido: chats.upsert
+17:00:04 [LOG] [PollService] Enquete do turno noite disparada com sucesso!
+17:00:04 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:04 [LOG] [Webhook] Evento recebido: send.message
+17:00:04 [LOG] [Webhook] Evento recebido: messages.update
+17:00:04 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:00:04 [LOG] [Webhook] Evento recebido: messages.update
+17:00:04 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:00:04 [LOG] [Webhook] Evento recebido: chats.upsert
+17:00:04 [LOG] [PollService] Enquete do turno noite disparada com sucesso!
+17:00:04 [LOG] [Cron] Acionando Enquete de noite para Vinicius Junior (17:00)
+17:00:04 [LOG] [Webhook] Evento recebido: send.message
+17:00:04 [LOG] [Webhook] Evento recebido: messages.update
+17:00:04 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:00:04 [LOG] [Webhook] Evento recebido: messages.update
+17:00:04 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:00:04 [LOG] [Webhook] Evento recebido: chats.upsert
+17:00:05 [LOG] [PollService] Enquete do turno noite disparada com sucesso!
+17:00:05 [LOG] [Webhook] Evento recebido: send.message
+17:00:06 [LOG] [PollService] Enquete do turno noite disparada com sucesso!
+17:00:06 [LOG] [Webhook] Evento recebido: send.message
+17:00:06 [LOG] [PollService] Enquete do turno noite disparada com sucesso!
+17:00:06 [LOG] [Webhook] Evento recebido: send.message
+17:00:25 [LOG] [Webhook] Evento recebido: messages.upsert
+17:00:25 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A95B2B854B0A68789F4","participant":"182703831933160@lid","participantAlt":"557998389263@s.whatsapp.net","addressingMode":"lid"},"pus
+17:00:25 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:00:25 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:00:25 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:25 [LOG] [Webhook] Evento recebido: chats.update
+17:00:25 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:29 [LOG] [Webhook] Evento recebido: messages.upsert
+17:00:29 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3AE5A4C366E83E864E56","participant":"182703831933160@lid","participantAlt":"557998389263@s.whatsapp.net","addressingMode":"lid"},"pus
+17:00:29 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:00:29 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:00:29 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:29 [LOG] [Webhook] Evento recebido: chats.update
+17:00:29 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:46 [LOG] [Webhook] Evento recebido: messages.upsert
+17:00:46 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A798455D419BAB892A5","participant":"93029041967333@lid","participantAlt":"557998520102@s.whatsapp.net","addressingMode":"lid"},"push
+17:00:46 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:00:46 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:00:46 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:46 [LOG] [Webhook] Evento recebido: chats.update
+17:00:46 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:48 [LOG] [Webhook] Evento recebido: messages.upsert
+17:00:48 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A022E1F03630A9F322A","participant":"182703831933160@lid","participantAlt":"557998389263@s.whatsapp.net","addressingMode":"lid"},"pus
+17:00:48 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:00:48 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:00:48 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:48 [LOG] [Webhook] Evento recebido: chats.update
+17:00:49 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:53 [LOG] [Webhook] Evento recebido: messages.upsert
+17:00:53 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3EB088A996E8FEECEBCB9A","participant":"18300906000551@lid","participantAlt":"557988850381@s.whatsapp.net","addressingMode":"lid"},"pu
+17:00:53 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:00:53 [LOG] [Webhook] Message keys: senderKeyDistributionMessage,messageContextInfo,pollUpdateMessage
+17:00:53 [LOG] [Webhook] PollUpdate detectado via messages.upsert de 120363408172221517@g.us
+17:00:53 [LOG] [Webhook] Recebeu voto de enquete: Não Vou | voter=557988850381@s.whatsapp.net | group=120363408172221517@g.us
+17:00:53 [LOG] [Webhook] Voto registrado: Carlos Menezes Silva sales -> ida=ausente, volta=ausente (Viagem #2)
+17:00:53 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:53 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:55 [LOG] [Webhook] Evento recebido: messages.update
+17:00:55 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:00:55 [LOG] [Webhook] Evento recebido: messages.update
+17:00:55 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:00:55 [LOG] [Webhook] Evento recebido: chats.upsert
+17:00:55 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:57 [LOG] [Webhook] Evento recebido: messages.upsert
+17:00:57 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A126CD9D93983FFC329","participant":"182703831933160@lid","participantAlt":"557998389263@s.whatsapp.net","addressingMode":"lid"},"pus
+17:00:57 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:00:57 [LOG] [Webhook] Message keys: messageContextInfo,conversation
+17:00:57 [LOG] [Webhook] Evento recebido: contacts.update
+17:00:57 [LOG] [Webhook] Evento recebido: chats.update
+17:00:58 [LOG] [Webhook] Evento recebido: contacts.update
+17:01:05 [LOG] [Webhook] Evento recebido: messages.upsert
+17:01:05 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3ACB0345C4F1C945EC04","participant":"93029041967333@lid","participantAlt":"557998520102@s.whatsapp.net","addressingMode":"lid"},"push
+17:01:05 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:01:05 [LOG] [Webhook] Message keys: pollUpdateMessage
+17:01:05 [LOG] [Webhook] PollUpdate detectado via messages.upsert de 120363408172221517@g.us
+17:01:05 [LOG] [Webhook] Recebeu voto de enquete: Vou (Ida e Volta) | voter=557998520102@s.whatsapp.net | group=120363408172221517@g.us
+17:01:05 [LOG] [Webhook] Voto registrado: Neymar Júnior -> ida=confirmado, volta=confirmado (Viagem #2)
+17:01:05 [LOG] [Webhook] Evento recebido: contacts.update
+17:01:05 [LOG] [Webhook] Evento recebido: contacts.update
+17:01:06 [LOG] [Webhook] Evento recebido: messages.upsert
+17:01:06 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3AF3B2441F6E1831CA47","participant":"182703831933160@lid","participantAlt":"557998389263@s.whatsapp.net","addressingMode":"lid"},"pus
+17:01:06 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:01:06 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:01:06 [LOG] [Webhook] Evento recebido: contacts.update
+17:01:06 [LOG] [Webhook] Evento recebido: chats.update
+17:01:06 [LOG] [Webhook] Evento recebido: contacts.update
+17:01:16 [LOG] [Webhook] Evento recebido: messages.upsert
+17:01:16 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3AB63040A7529F7F596C","participant":"93029041967333@lid","participantAlt":"557998520102@s.whatsapp.net","addressingMode":"lid"},"push
+17:01:16 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:01:16 [LOG] [Webhook] Message keys: pollUpdateMessage
+17:01:16 [LOG] [Webhook] PollUpdate detectado via messages.upsert de 120363408172221517@g.us
+17:01:16 [LOG] [Webhook] Recebeu voto de enquete: Só Ida | voter=557998520102@s.whatsapp.net | group=120363408172221517@g.us
+17:01:16 [LOG] [Webhook] Voto registrado: Neymar Júnior -> ida=confirmado, volta=ausente (Viagem #2)
+17:01:16 [LOG] [Webhook] Evento recebido: contacts.update
+17:01:17 [LOG] [Webhook] Evento recebido: contacts.update
+17:01:40 [LOG] [Webhook] Evento recebido: messages.upsert
+17:01:40 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A29C8F80B341F4BFC9A","participant":"93029041967333@lid","participantAlt":"557998520102@s.whatsapp.net","addressingMode":"lid"},"push
+17:01:40 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:01:40 [LOG] [Webhook] Message keys: pollUpdateMessage
+17:01:40 [LOG] [Webhook] PollUpdate detectado via messages.upsert de 120363408172221517@g.us
+17:01:40 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:01:40 [LOG] [Webhook] Evento recebido: contacts.update
+17:01:40 [LOG] [Webhook] Evento recebido: contacts.update
+17:09:53 [LOG] [Webhook] Evento recebido: messages.upsert
+17:09:53 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3AEC41BFE91A8E320D16","participant":"235149560119320@lid","participantAlt":"557998546591@s.whatsapp.net","addressingMode":"lid"},"pus
+17:09:53 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:09:53 [LOG] [Webhook] Message keys: messageContextInfo,conversation
+17:09:53 [LOG] [Webhook] Evento recebido: contacts.update
+17:09:53 [LOG] [Webhook] Evento recebido: chats.update
+17:09:53 [LOG] [Webhook] Evento recebido: contacts.update
+17:10:05 [LOG] [Webhook] Evento recebido: messages.upsert
+17:10:05 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A4117D0F738C3B36580","participant":"235149560119320@lid","participantAlt":"557998546591@s.whatsapp.net","addressingMode":"lid"},"pus
+17:10:05 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:10:05 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:10:05 [LOG] [Webhook] Evento recebido: contacts.update
+17:10:05 [LOG] [Webhook] Evento recebido: chats.update
+17:10:06 [LOG] [Webhook] Evento recebido: contacts.update
+17:19:19 [LOG] [Webhook] Evento recebido: messages.upsert
+17:19:19 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3AF7C9F34B6648870612","participant":"182703831933160@lid","participantAlt":"557998389263@s.whatsapp.net","addressingMode":"lid"},"pus
+17:19:19 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:19:19 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:19:19 [LOG] [Webhook] Evento recebido: contacts.update
+17:19:19 [LOG] [Webhook] Evento recebido: chats.update
+17:19:20 [LOG] [Webhook] Evento recebido: contacts.update
+17:22:43 [LOG] [Webhook] Evento recebido: messages.upsert
+17:22:43 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A7F7026343ADD706496","participant":"93029041967333@lid","participantAlt":"557998520102@s.whatsapp.net","addressingMode":"lid"},"push
+17:22:43 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:22:43 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:22:43 [LOG] [Webhook] Evento recebido: contacts.update
+17:22:43 [LOG] [Webhook] Evento recebido: chats.update
+17:22:43 [LOG] [Webhook] Evento recebido: contacts.update
+17:23:06 [LOG] [Webhook] Evento recebido: messages.upsert
+17:23:06 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3ABD370C1B4D9AB88142","participant":"93029041967333@lid","participantAlt":"557998520102@s.whatsapp.net","addressingMode":"lid"},"push
+17:23:06 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:23:06 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:23:06 [LOG] [Webhook] Evento recebido: contacts.update
+17:23:06 [LOG] [Webhook] Evento recebido: chats.update
+17:23:06 [LOG] [Webhook] Evento recebido: contacts.update
+17:23:33 [LOG] [Webhook] Evento recebido: messages.upsert
+17:23:33 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A191229007C7D268174","participant":"235149560119320@lid","participantAlt":"557998546591@s.whatsapp.net","addressingMode":"lid"},"pus
+17:23:33 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:23:33 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:23:33 [LOG] [Webhook] Evento recebido: contacts.update
+17:23:33 [LOG] [Webhook] Evento recebido: chats.update
+17:23:33 [LOG] [Webhook] Evento recebido: contacts.update
+17:23:54 [LOG] [Webhook] Evento recebido: messages.upsert
+17:23:54 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3AFD9B204086988AFAB8","participant":"235149560119320@lid","participantAlt":"557998546591@s.whatsapp.net","addressingMode":"lid"},"pus
+17:23:54 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:23:54 [LOG] [Webhook] Message keys: messageContextInfo,conversation
+17:23:54 [LOG] [Webhook] Evento recebido: contacts.update
+17:23:54 [LOG] [Webhook] Evento recebido: chats.update
+17:23:54 [LOG] [Webhook] Evento recebido: contacts.update
+17:24:04 [LOG] [Webhook] Evento recebido: messages.upsert
+17:24:04 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A8F4423F3A4C59E3294","participant":"182703831933160@lid","participantAlt":"557998389263@s.whatsapp.net","addressingMode":"lid"},"pus
+17:24:04 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:24:04 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:24:04 [LOG] [Webhook] Evento recebido: contacts.update
+17:24:04 [LOG] [Webhook] Evento recebido: chats.update
+17:24:04 [LOG] [Webhook] Evento recebido: contacts.update
+17:24:08 [LOG] [Webhook] Evento recebido: messages.upsert
+17:24:08 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3AA9FFFF33B0921AAEEB","participant":"235149560119320@lid","participantAlt":"557998546591@s.whatsapp.net","addressingMode":"lid"},"pus
+17:24:08 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:24:08 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:24:09 [LOG] [Webhook] Evento recebido: contacts.update
+17:24:09 [LOG] [Webhook] Evento recebido: chats.update
+17:24:09 [LOG] [Webhook] Evento recebido: contacts.update
+17:24:10 [LOG] [Webhook] Evento recebido: messages.upsert
+17:24:10 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A5680FFA1B196DA1977","participant":"235149560119320@lid","participantAlt":"557998546591@s.whatsapp.net","addressingMode":"lid"},"pus
+17:24:10 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:24:10 [LOG] [Webhook] Message keys: conversation,messageContextInfo
+17:24:10 [LOG] [Webhook] Evento recebido: contacts.update
+17:24:10 [LOG] [Webhook] Evento recebido: chats.update
+17:24:10 [LOG] [Webhook] Evento recebido: contacts.update
+17:25:29 [LOG] [Webhook] Evento recebido: messages.upsert
+17:25:29 [LOG] [DEBUG] Processando mensagem: {"key":{"remoteJid":"120363408172221517@g.us","fromMe":false,"id":"3A42E20E08F1167CB4D4","participant":"182703831933160@lid","participantAlt":"557998389263@s.whatsapp.net","addressingMode":"lid"},"pus
+17:25:29 [LOG] [Webhook] Mensagem recebida de 120363408172221517@g.us
+17:25:29 [LOG] [Webhook] Message keys: pollUpdateMessage
+17:25:29 [LOG] [Webhook] PollUpdate detectado via messages.upsert de 120363408172221517@g.us
+17:25:29 [LOG] [Webhook] Recebeu voto de enquete: Vou (Ida e Volta) | voter=557998389263@s.whatsapp.net | group=120363408172221517@g.us
+17:25:29 [LOG] [Webhook] Voto registrado: Manoel Gomes -> ida=confirmado, volta=confirmado (Viagem #2)
+17:25:29 [LOG] [Webhook] Evento recebido: contacts.update
+17:25:29 [LOG] [Webhook] Evento recebido: contacts.update
+17:55:00 [LOG] [Cron] Fechando Rota de noite para 1 motorista(s) no horario 17:55...
+17:55:00 [LOG] [Cron] Fechando Rota de noite para 1 motorista(s) no horario 17:55...
+17:55:00 [LOG] [Cron] Fechando Rota de noite para 1 motorista(s) no horario 17:55...
+17:55:01 [LOG] [Evolution] Simulando Digitação -> 5000 ms (182 chars)
+17:55:01 [LOG] [Evolution] Simulando Digitação -> 5000 ms (182 chars)
+17:55:01 [LOG] [Evolution] Simulando Digitação -> 5000 ms (182 chars)
+17:55:08 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:08 [LOG] [Webhook] Evento recebido: send.message
+17:55:09 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:09 [LOG] [Webhook] Evento recebido: send.message
+17:55:09 [LOG] [Evolution] Simulando Digitação -> 5000 ms (132 chars)
+17:55:09 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:09 [LOG] [Webhook] Evento recebido: send.message
+17:55:10 [LOG] [Evolution] Simulando Digitação -> 5000 ms (135 chars)
+17:55:10 [LOG] [Evolution] Simulando Digitação -> 5000 ms (135 chars)
+17:55:11 [LOG] [Webhook] Evento recebido: messages.update
+17:55:11 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:11 [LOG] [Webhook] Evento recebido: messages.update
+17:55:11 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:11 [LOG] [Webhook] Evento recebido: messages.update
+17:55:11 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:11 [LOG] [Webhook] Evento recebido: messages.update
+17:55:11 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:11 [LOG] [Webhook] Evento recebido: messages.update
+17:55:11 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:11 [LOG] [Webhook] Evento recebido: messages.update
+17:55:11 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:16 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:16 [LOG] [Webhook] Evento recebido: send.message
+17:55:17 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:17 [LOG] [Webhook] Evento recebido: send.message
+17:55:17 [LOG] [Evolution] Simulando Digitação -> 5000 ms (105 chars)
+17:55:17 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:17 [LOG] [Webhook] Evento recebido: send.message
+17:55:17 [LOG] [Webhook] Evento recebido: messages.update
+17:55:17 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:17 [LOG] [Webhook] Evento recebido: messages.update
+17:55:17 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:17 [LOG] [Evolution] Simulando Digitação -> 5000 ms (109 chars)
+17:55:17 [LOG] [Webhook] Evento recebido: messages.update
+17:55:17 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:17 [LOG] [Webhook] Evento recebido: messages.update
+17:55:17 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:18 [LOG] [Evolution] Simulando Digitação -> 5000 ms (105 chars)
+17:55:18 [LOG] [Webhook] Evento recebido: messages.update
+17:55:18 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:18 [LOG] [Webhook] Evento recebido: messages.update
+17:55:18 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:24 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:24 [LOG] [Cron] Rota gerada para motorista Vinicius Junior (Viagem #2)
+17:55:24 [LOG] [Webhook] Evento recebido: send.message
+17:55:24 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:24 [LOG] [Webhook] Evento recebido: send.message
+17:55:24 [LOG] [Cron] Rota gerada para motorista Vinicius Junior (Viagem #2)
+17:55:25 [LOG] [Evolution] Mensagem Despachada com Sucesso para 557998546591@s.whatsapp.net
+17:55:25 [LOG] [Webhook] Evento recebido: send.message
+17:55:25 [LOG] [Cron] Rota gerada para motorista Vinicius Junior (Viagem #2)
+17:55:25 [LOG] [Webhook] Evento recebido: messages.update
+17:55:25 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:25 [LOG] [Webhook] Evento recebido: messages.update
+17:55:25 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:25 [LOG] [Webhook] Evento recebido: messages.update
+17:55:25 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:25 [LOG] [Webhook] Evento recebido: messages.update
+17:55:25 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:25 [LOG] [Webhook] Evento recebido: messages.update
+17:55:25 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:25 [LOG] [Webhook] Evento recebido: messages.update
+17:55:25 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+17:55:41 [LOG] [Webhook] Evento recebido: messages.update
+17:55:41 [LOG] [Webhook] PollUpdate sem opcao selecionada. Ignorando...
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:34:30
+=========================================
+01:34:30 [LOG] [Sistema] Carregando modelos...
+01:34:31 [LOG] [Sistema] Carregando rotas...
+01:34:32 [LOG] [Sistema] Carregando serviços de agendamento...
+01:34:32 [LOG] [Sistema] Inicializando Express...
+01:34:32 [LOG] [Banco de Dados] Iniciando sincronização...
+01:34:32 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:34:32 [LOG] [CronService] Iniciando agendamentos...
+01:34:32 [LOG] [CronService] Carregando Agendamentos...
+01:34:32 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:34:32 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:34:32 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:34:32 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:34:32 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:34:32 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:35:20
+=========================================
+01:35:20 [LOG] [Sistema] Carregando modelos...
+01:35:21 [LOG] [Sistema] Carregando rotas...
+01:35:21 [LOG] [Sistema] Carregando serviços de agendamento...
+01:35:21 [LOG] [Sistema] Inicializando Express...
+01:35:21 [LOG] [Banco de Dados] Iniciando sincronização...
+01:35:21 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:35:21 [LOG] [CronService] Iniciando agendamentos...
+01:35:21 [LOG] [CronService] Carregando Agendamentos...
+01:35:21 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:35:21 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:35:21 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:35:21 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:35:21 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:35:21 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:35:57
+=========================================
+01:35:57 [LOG] [Sistema] Carregando modelos...
+01:35:57 [LOG] [Sistema] Carregando rotas...
+01:35:58 [LOG] [Sistema] Carregando serviços de agendamento...
+01:35:58 [LOG] [Sistema] Inicializando Express...
+01:35:58 [LOG] [Banco de Dados] Iniciando sincronização...
+01:35:58 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:35:58 [LOG] [CronService] Iniciando agendamentos...
+01:35:58 [LOG] [CronService] Carregando Agendamentos...
+01:35:58 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:35:58 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:35:58 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:35:58 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:35:58 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:35:58 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:36:08
+=========================================
+01:36:08 [LOG] [Sistema] Carregando modelos...
+01:36:09 [LOG] [Sistema] Carregando rotas...
+01:36:09 [LOG] [Sistema] Carregando serviços de agendamento...
+01:36:09 [LOG] [Sistema] Inicializando Express...
+01:36:09 [LOG] [Banco de Dados] Iniciando sincronização...
+01:36:09 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:36:09 [LOG] [CronService] Iniciando agendamentos...
+01:36:09 [LOG] [CronService] Carregando Agendamentos...
+01:36:09 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:36:09 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:36:09 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:36:09 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:36:09 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:36:09 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:36:19
+=========================================
+01:36:19 [LOG] [Sistema] Carregando modelos...
+01:36:20 [LOG] [Sistema] Carregando rotas...
+01:36:20 [LOG] [Sistema] Carregando serviços de agendamento...
+01:36:20 [LOG] [Sistema] Inicializando Express...
+01:36:20 [LOG] [Banco de Dados] Iniciando sincronização...
+01:36:20 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:36:20 [LOG] [CronService] Iniciando agendamentos...
+01:36:20 [LOG] [CronService] Carregando Agendamentos...
+01:36:20 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:36:20 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:36:20 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:36:20 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:36:20 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:36:20 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:39:10
+=========================================
+01:39:10 [LOG] [Sistema] Carregando modelos...
+01:39:11 [LOG] [Sistema] Carregando rotas...
+01:39:11 [LOG] [Sistema] Carregando serviços de agendamento...
+01:39:11 [LOG] [Sistema] Inicializando Express...
+01:39:11 [LOG] [Banco de Dados] Iniciando sincronização...
+01:39:11 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:39:11 [LOG] [CronService] Iniciando agendamentos...
+01:39:11 [LOG] [CronService] Carregando Agendamentos...
+01:39:11 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:39:11 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:39:11 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:39:11 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:39:11 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:39:11 [LOG] [Servidor] Em execução na porta 3000
+01:40:38 [LOG] [Webhook] Evento recebido: connection.update
+01:40:38 [LOG] [Webhook] Evento recebido: connection.update
+01:40:40 [LOG] [Webhook] Evento recebido: connection.update
+01:40:40 [LOG] [Webhook] Evento recebido: connection.update
+01:43:54 [LOG] [Webhook] Evento recebido: contacts.update
+01:44:25 [LOG] [Webhook] Evento recebido: contacts.update
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:45:37
+=========================================
+01:45:37 [LOG] [Sistema] Carregando modelos...
+01:45:38 [LOG] [Sistema] Carregando rotas...
+01:45:38 [LOG] [Sistema] Carregando serviços de agendamento...
+01:45:38 [LOG] [Sistema] Inicializando Express...
+01:45:38 [LOG] [Banco de Dados] Iniciando sincronização...
+01:45:38 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:45:38 [LOG] [CronService] Iniciando agendamentos...
+01:45:38 [LOG] [CronService] Carregando Agendamentos...
+01:45:38 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:45:38 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:45:38 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:45:38 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:45:38 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:45:38 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:45:41
+=========================================
+01:45:41 [LOG] [Sistema] Carregando modelos...
+01:45:41 [LOG] [Sistema] Carregando rotas...
+01:45:41 [LOG] [Sistema] Carregando serviços de agendamento...
+01:45:41 [LOG] [Sistema] Inicializando Express...
+01:45:41 [LOG] [Banco de Dados] Iniciando sincronização...
+01:45:41 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:45:41 [LOG] [CronService] Iniciando agendamentos...
+01:45:41 [LOG] [CronService] Carregando Agendamentos...
+01:45:41 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:45:41 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:45:41 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:45:41 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:45:41 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:45:41 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:45:46
+=========================================
+01:45:46 [LOG] [Sistema] Carregando modelos...
+01:45:46 [LOG] [Sistema] Carregando rotas...
+01:45:47 [LOG] [Sistema] Carregando serviços de agendamento...
+01:45:47 [LOG] [Sistema] Inicializando Express...
+01:45:47 [LOG] [Banco de Dados] Iniciando sincronização...
+01:45:47 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:45:47 [LOG] [CronService] Iniciando agendamentos...
+01:45:47 [LOG] [CronService] Carregando Agendamentos...
+01:45:47 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:45:47 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:45:47 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:45:47 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:45:47 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:45:47 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:46:02
+=========================================
+01:46:02 [LOG] [Sistema] Carregando modelos...
+01:46:02 [LOG] [Sistema] Carregando rotas...
+01:46:03 [LOG] [Sistema] Carregando serviços de agendamento...
+01:46:03 [LOG] [Sistema] Inicializando Express...
+01:46:03 [LOG] [Banco de Dados] Iniciando sincronização...
+01:46:03 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:46:03 [LOG] [CronService] Iniciando agendamentos...
+01:46:03 [LOG] [CronService] Carregando Agendamentos...
+01:46:03 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:46:03 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:46:03 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:46:03 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:46:03 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:46:03 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:56:16
+=========================================
+01:56:16 [LOG] [Sistema] Carregando modelos...
+01:56:17 [LOG] [Sistema] Carregando rotas...
+01:56:17 [LOG] [Sistema] Carregando serviços de agendamento...
+01:56:17 [LOG] [Sistema] Inicializando Express...
+01:56:17 [LOG] [Banco de Dados] Iniciando sincronização...
+01:56:17 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:56:17 [LOG] [CronService] Iniciando agendamentos...
+01:56:17 [LOG] [CronService] Carregando Agendamentos...
+01:56:17 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:56:17 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:56:17 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:56:17 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:56:17 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:56:17 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:56:33
+=========================================
+01:56:33 [LOG] [Sistema] Carregando modelos...
+01:56:33 [LOG] [Sistema] Carregando rotas...
+01:56:33 [LOG] [Sistema] Carregando serviços de agendamento...
+01:56:33 [LOG] [Sistema] Inicializando Express...
+01:56:33 [LOG] [Banco de Dados] Iniciando sincronização...
+01:56:33 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:56:33 [LOG] [CronService] Iniciando agendamentos...
+01:56:33 [LOG] [CronService] Carregando Agendamentos...
+01:56:33 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:56:33 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:56:33 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:56:33 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:56:33 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:56:33 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:58:28
+=========================================
+01:58:28 [LOG] [Sistema] Carregando modelos...
+01:58:29 [LOG] [Sistema] Carregando rotas...
+01:58:29 [LOG] [Sistema] Carregando serviços de agendamento...
+01:58:29 [LOG] [Sistema] Inicializando Express...
+01:58:29 [LOG] [Banco de Dados] Iniciando sincronização...
+01:58:29 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:58:29 [LOG] [CronService] Iniciando agendamentos...
+01:58:29 [LOG] [CronService] Carregando Agendamentos...
+01:58:29 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:58:29 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:58:29 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:58:29 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:58:29 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:58:29 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:59:09
+=========================================
+01:59:09 [LOG] [Sistema] Carregando modelos...
+01:59:09 [LOG] [Sistema] Carregando rotas...
+01:59:10 [LOG] [Sistema] Carregando serviços de agendamento...
+01:59:10 [LOG] [Sistema] Inicializando Express...
+01:59:10 [LOG] [Banco de Dados] Iniciando sincronização...
+01:59:10 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:59:10 [LOG] [CronService] Iniciando agendamentos...
+01:59:10 [LOG] [CronService] Carregando Agendamentos...
+01:59:10 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:59:10 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:59:10 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:59:10 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:59:10 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:59:10 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:59:33
+=========================================
+01:59:33 [LOG] [Sistema] Carregando modelos...
+01:59:34 [LOG] [Sistema] Carregando rotas...
+01:59:34 [LOG] [Sistema] Carregando serviços de agendamento...
+01:59:34 [LOG] [Sistema] Inicializando Express...
+01:59:34 [LOG] [Banco de Dados] Iniciando sincronização...
+01:59:34 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:59:34 [LOG] [CronService] Iniciando agendamentos...
+01:59:34 [LOG] [CronService] Carregando Agendamentos...
+01:59:34 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:59:34 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:59:34 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:59:34 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:59:34 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:59:34 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 01:59:38
+=========================================
+01:59:38 [LOG] [Sistema] Carregando modelos...
+01:59:39 [LOG] [Sistema] Carregando rotas...
+01:59:39 [LOG] [Sistema] Carregando serviços de agendamento...
+01:59:39 [LOG] [Sistema] Inicializando Express...
+01:59:39 [LOG] [Banco de Dados] Iniciando sincronização...
+01:59:39 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+01:59:39 [LOG] [CronService] Iniciando agendamentos...
+01:59:39 [LOG] [CronService] Carregando Agendamentos...
+01:59:39 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+01:59:39 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+01:59:39 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+01:59:39 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+01:59:39 [LOG] [CronService] Agendamentos carregados com sucesso.
+01:59:39 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 02:03:16
+=========================================
+02:03:16 [LOG] [Sistema] Carregando modelos...
+02:03:16 [LOG] [Sistema] Carregando rotas...
+02:03:17 [LOG] [Sistema] Carregando serviços de agendamento...
+02:03:17 [LOG] [Sistema] Inicializando Express...
+02:03:17 [LOG] [Banco de Dados] Iniciando sincronização...
+02:03:17 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+02:03:17 [LOG] [CronService] Iniciando agendamentos...
+02:03:17 [LOG] [CronService] Carregando Agendamentos...
+02:03:17 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+02:03:17 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+02:03:17 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+02:03:17 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+02:03:17 [LOG] [CronService] Agendamentos carregados com sucesso.
+02:03:17 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 02:03:49
+=========================================
+02:03:49 [LOG] [Sistema] Carregando modelos...
+02:03:50 [LOG] [Sistema] Carregando rotas...
+02:03:50 [LOG] [Sistema] Carregando serviços de agendamento...
+02:03:50 [LOG] [Sistema] Inicializando Express...
+02:03:50 [LOG] [Banco de Dados] Iniciando sincronização...
+02:03:50 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+02:03:50 [LOG] [CronService] Iniciando agendamentos...
+02:03:50 [LOG] [CronService] Carregando Agendamentos...
+02:03:50 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+02:03:50 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+02:03:50 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+02:03:50 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+02:03:50 [LOG] [CronService] Agendamentos carregados com sucesso.
+02:03:50 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 02:03:53
+=========================================
+02:03:53 [LOG] [Sistema] Carregando modelos...
+02:03:53 [LOG] [Sistema] Carregando rotas...
+02:03:53 [LOG] [Sistema] Carregando serviços de agendamento...
+02:03:53 [LOG] [Sistema] Inicializando Express...
+02:03:53 [LOG] [Banco de Dados] Iniciando sincronização...
+02:03:53 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+02:03:53 [LOG] [CronService] Iniciando agendamentos...
+02:03:53 [LOG] [CronService] Carregando Agendamentos...
+02:03:53 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+02:03:53 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+02:03:53 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+02:03:53 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+02:03:53 [LOG] [CronService] Agendamentos carregados com sucesso.
+02:03:53 [LOG] [Servidor] Em execução na porta 3000
+
+
+=========================================
+[SISTEMA] Novo Log (Restart) iniciado em 23/04/2026, 02:04:15
+=========================================
+02:04:15 [LOG] [Sistema] Carregando modelos...
+02:04:16 [LOG] [Sistema] Carregando rotas...
+02:04:16 [LOG] [Sistema] Carregando serviços de agendamento...
+02:04:16 [LOG] [Sistema] Inicializando Express...
+02:04:16 [LOG] [Banco de Dados] Iniciando sincronização...
+02:04:16 [LOG] [Banco de Dados] SQLite conectado e modelos sincronizados com sucesso.
+02:04:16 [LOG] [CronService] Iniciando agendamentos...
+02:04:16 [LOG] [CronService] Carregando Agendamentos...
+02:04:16 [LOG] [CronService] Turno manha -> jobs por minuto com defaults Poll: 05:00 | Fechamento: 05:55
+02:04:16 [LOG] [CronService] Turno tarde -> jobs por minuto com defaults Poll: 11:00 | Fechamento: 11:55
+02:04:16 [LOG] [CronService] Turno noite -> jobs por minuto com defaults Poll: 17:00 | Fechamento: 17:55
+02:04:16 [LOG] [CronService] Geração automática de mensalidades agendada (dia 1, 00:05).
+02:04:16 [LOG] [CronService] Agendamentos carregados com sucesso.
+02:04:16 [LOG] [Servidor] Em execução na porta 3000
