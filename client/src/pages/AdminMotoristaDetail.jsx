@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  ArrowLeft, Users, DollarSign, Settings, Save, MapPin, Clock, Send, Edit2, Trash2, Plus, CheckCircle2, XCircle, FileText
+  ArrowLeft, Users, DollarSign, Settings, Save, MapPin, Clock, Send, Edit2, Trash2, Plus, CheckCircle2, XCircle, FileText, TrendingDown
 } from 'lucide-react';
 
 const AdminMotoristaDetail = () => {
@@ -21,7 +21,7 @@ const AdminMotoristaDetail = () => {
   const [novoAluno, setNovoAluno] = useState({ nome: '', telefone_responsavel: '', turno: 'manha', endereco: '', mensalidade: 0 });
 
   // States Financeiro
-  const [financeiro, setFinanceiro] = useState([]);
+  const [financeiro, setFinanceiro] = useState({ receitas: [], despesas: [] });
 
   // States Config
   const [baseAddress, setBaseAddress] = useState('');
@@ -55,7 +55,10 @@ const AdminMotoristaDetail = () => {
         setAlunos(data);
       } else if (tab === 'financeiro') {
         const { data } = await axios.get(`/api/admin/motoristas/${id}/financeiro`, configReq);
-        setFinanceiro(data);
+        setFinanceiro({
+          receitas: Array.isArray(data?.receitas) ? data.receitas : [],
+          despesas: Array.isArray(data?.despesas) ? data.despesas : []
+        });
       } else if (tab === 'config') {
         const { data } = await axios.get(`/api/admin/motoristas/${id}/config`, configReq);
         setBaseAddress(data.baseAddress);
@@ -66,9 +69,22 @@ const AdminMotoristaDetail = () => {
       }
     } catch (e) {
       console.error(`Erro tab ${tab}`, e);
+      if (tab === 'financeiro') {
+        setFinanceiro({ receitas: [], despesas: [] });
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatCurrency = (value) => Number(value || 0).toFixed(2);
+  const formatDate = (value) => {
+    if (!value) return '-';
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString('pt-BR');
+    }
+    return String(value).split('-').reverse().join('/');
   };
 
   // --- Alunos Actions ---
@@ -357,8 +373,8 @@ const AdminMotoristaDetail = () => {
                              </span>
                           </td>
                           <td className="p-4 font-bold" style={{ color: 'var(--color-text)' }}>{f.nome_passageiro} <span className="text-xs font-normal" style={{ color: 'var(--color-text-light)' }}>({f.turno})</span></td>
-                          <td className="p-4" style={{ color: 'var(--color-text-light)' }}>{f.vencimento.split('-').reverse().join('/')}</td>
-                          <td className="p-4 font-bold" style={{ color: 'var(--color-text)' }}>R$ {f.valor.toFixed(2)}</td>
+                          <td className="p-4" style={{ color: 'var(--color-text-light)' }}>{formatDate(f.vencimento)}</td>
+                          <td className="p-4 font-bold" style={{ color: 'var(--color-text)' }}>R$ {formatCurrency(f.valor)}</td>
                         </tr>
                       ))}
                       {(!financeiro?.receitas || financeiro.receitas.length === 0) && <tr><td colSpan="4" className="p-8 text-center" style={{ color: 'var(--color-text-light)' }}>Nenhuma mensalidade encontrada.</td></tr>}
@@ -374,7 +390,7 @@ const AdminMotoristaDetail = () => {
                     <TrendingDown size={20} className="text-red-500" /> Despesas da Van (Saídas via Bot)
                   </h2>
                   <div className="bg-red-500/10 text-red-500 px-4 py-1 rounded-full text-sm font-bold">
-                    Total: R$ {(financeiro?.despesas || []).reduce((acc, curr) => acc + curr.valor, 0).toFixed(2)}
+                    Total: R$ {(financeiro?.despesas || []).reduce((acc, curr) => acc + Number(curr?.valor || 0), 0).toFixed(2)}
                   </div>
                 </div>
                 <div className="overflow-x-auto">
@@ -391,7 +407,7 @@ const AdminMotoristaDetail = () => {
                       {(financeiro?.despesas || []).map(d => (
                         <tr key={d.id} style={{ borderBottom: '1px solid var(--color-border)' }} className="hover:bg-white/5">
                           <td className="p-4" style={{ color: 'var(--color-text-light)' }}>
-                            {new Date(d.createdAt).toLocaleDateString('pt-BR')}
+                            {formatDate(d.createdAt)}
                           </td>
                           <td className="p-4">
                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full text-amber-500 bg-amber-500/10">
@@ -399,7 +415,7 @@ const AdminMotoristaDetail = () => {
                              </span>
                           </td>
                           <td className="p-4" style={{ color: 'var(--color-text)' }}>{d.descricao}</td>
-                          <td className="p-4 font-bold text-red-500">- R$ {d.valor.toFixed(2)}</td>
+                          <td className="p-4 font-bold text-red-500">- R$ {formatCurrency(d.valor)}</td>
                         </tr>
                       ))}
                       {(!financeiro?.despesas || financeiro.despesas.length === 0) && <tr><td colSpan="4" className="p-8 text-center" style={{ color: 'var(--color-text-light)' }}>Nenhuma despesa registrada via bot.</td></tr>}

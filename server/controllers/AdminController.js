@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 const { Op } = require('sequelize');
+const sequelize = require('../config/database');
 const Motorista = require('../models/Motorista');
 const Assinatura = require('../models/Assinatura');
 const Passageiro = require('../models/Passageiro');
@@ -13,6 +14,7 @@ const Financeiro = require('../models/Financeiro');
 const Config = require('../models/Config');
 const Endereco = require('../models/Endereco');
 const Despesa = require('../models/Despesa');
+const ViagemPassageiro = require('../models/ViagemPassageiro');
 const { normalizePhone } = require('../utils/phoneHelper');
 const { hashPassword } = require('../utils/passwordHash');
 const CronService = require('../services/CronService');
@@ -553,11 +555,42 @@ class AdminController {
     }
   }
 
-  async deletarAluno(req, res) {
+async deletarAluno(req, res) {
     try {
       const { id, alunoId } = req.params;
-      const deleted = await Passageiro.destroy({ where: { id: alunoId, motorista_id: id } });
-      if (!deleted) return res.status(404).json({ error: 'Aluno não encontrado' });
+      const aluno = await Passageiro.findOne({ where: { id: alunoId, motorista_id: id } });
+      if (!aluno) return res.status(404).json({ error: 'Aluno não encontrado' });
+
+      await sequelize.transaction(async (transaction) => {
+        await Passageiro.update({
+          endereco_ida_id: null,
+          endereco_volta_id: null
+        }, {
+          where: { id: aluno.id, motorista_id: id },
+          transaction
+        });
+
+        await ViagemPassageiro.destroy({
+          where: { passageiro_id: aluno.id },
+          transaction
+        });
+
+        await Financeiro.destroy({
+          where: { passageiro_id: aluno.id },
+          transaction
+        });
+
+        await Endereco.destroy({
+          where: { passageiro_id: aluno.id },
+          transaction
+        });
+
+        await Passageiro.destroy({
+          where: { id: aluno.id, motorista_id: id },
+          transaction
+        });
+      });
+
       return res.status(200).json({ message: 'Aluno removido com sucesso.' });
     } catch (error) {
       console.error('[AdminController] Erro deletarAluno:', error);

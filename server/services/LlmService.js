@@ -496,6 +496,54 @@ Me mande: *"Vou parar na semana que vem e volto dia 15"*. Eu coloco minha opera�
 
 Guarde essas dicas aqui no meu contato. Muito sucesso pra nós! 😉`;
   }
+  /**
+   * Retorna o tutorial das funcionalidades do sistema.
+   * Mantemos esta segunda definicao no fim da classe para sobrescrever a versao
+   * antiga caso o arquivo tenha trechos legados com encoding inconsistente.
+   */
+  getDriverTutorialMessage(motoristaNome = 'Motorista') {
+    const painelUrl = process.env.PAINEL_URL || process.env.FRONTEND_URL || 'http://localhost:5173/login';
+
+    return `📘 *GUIA RÁPIDO DO VANBORA*
+
+👋 ${motoristaNome}, segue um resumo do que você pode fazer comigo no privado:
+
+*1. Comandos diretos*
+- *garagem Rua X, 123, Bairro - Cidade* -> define sua base de saída
+- *escola Nome da escola, Cidade - UF* -> define o destino principal
+- *lotacao manha 15*
+- *lotacao tarde 12*
+- *lotacao noite 8*
+- *raio 1.5* -> altera o raio de aviso em km
+- *iniciar ida* ou *iniciar volta* -> ativa o rastreamento da rota
+
+*2. Rastreamento ao vivo*
+Quando você mandar *iniciar ida* ou *iniciar volta*, eu vou pedir sua localização em tempo real no WhatsApp. Com isso, comparo sua posição com os passageiros da rota e disparo os avisos de chegada automaticamente.
+
+*3. Enquetes e confirmações*
+Eu envio as enquetes diárias no grupo, fecho a contagem e monto a rota. Se algum passageiro confirmar depois no meu privado, eu atualizo a rota e te mando a ordem recalculada.
+
+*4. Despesas e financeiro*
+Pode me mandar texto ou áudio como:
+- *gastei 150 com gasolina*
+- *paguei 80 no pneu*
+Eu registro a despesa no seu financeiro.
+
+*5. Pausas da operação*
+Você pode falar naturalmente, por exemplo:
+- *vou parar até dia 15*
+- *amanhã é feriado*
+- *voltei a rodar hoje*
+Eu ajusto férias, recesso e retorno.
+
+*6. Painel*
+Seu painel fica em:
+${painelUrl}
+
+Lá você acompanha alunos, financeiro, configurações e dados da van.
+
+Se quiser reconfigurar algo, é só me mandar aqui no privado.`;
+  }
 }
 
 module.exports = new LlmService();

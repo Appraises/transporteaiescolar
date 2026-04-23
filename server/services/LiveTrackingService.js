@@ -21,6 +21,7 @@ const notificationCooldowns = new Map();
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutos
 
 const RAIO_COLETA = 400; // metros - marca como recolhido
+const LOOKAHEAD_PASSENGERS = 2; // além do passageiro atual da fila
 
 class LiveTrackingService {
 
@@ -127,6 +128,15 @@ class LiveTrackingService {
 
       console.log(`[GPS] Motorista ${motorista.nome} → ${passAtual.nome}: ${Math.round(distanciaAtual)}m (raio coleta: ${RAIO_COLETA}m, raio notif: ${raioNotificacao}m)`);
 
+      await this._processLookaheadPassengers(
+        passageirosOrdenados.slice(1, 1 + LOOKAHEAD_PASSENGERS),
+        trecho,
+        statusField,
+        currentLat,
+        currentLng,
+        raioNotificacao
+      );
+
       // 5. Lógica de proximidade SEQUENCIAL
 
       // 5a. Chegou no passageiro atual (≤ 400m) → marca como recolhido
@@ -207,6 +217,74 @@ class LiveTrackingService {
     if (temIda) return 'ida';
     if (temVolta) return 'volta';
     return 'ida';
+  }
+
+  async _processLookaheadPassengers(registros, trecho, statusField, currentLat, currentLng, raioNotificacao) {
+    for (let i = 0; i < registros.length; i++) {
+      const registro = registros[i];
+      const resolvido = this._resolvePassengerCoords(registro, trecho);
+
+      if (!resolvido) {
+        const nome = registro?.Passageiro?.nome || `lookahead_${i + 1}`;
+        console.log(`[GPS] Lookahead ${i + 1}: ${nome} sem coordenadas para o trecho ${trecho}.`);
+        continue;
+      }
+
+      const { passageiro, lat, lng } = resolvido;
+      const distancia = haversineMeters(currentLat, currentLng, lat, lng);
+      console.log(`[GPS] Lookahead ${i + 1} -> ${passageiro.nome}: ${Math.round(distancia)}m`);
+
+      const telefone = passageiro.telefone_responsavel || passageiro.telefone;
+      if (!telefone) {
+        continue;
+      }
+
+      if (distancia <= RAIO_COLETA) {
+        if (registro[statusField] === 'confirmado') {
+          registro[statusField] = 'em_rota';
+          await registro.save();
+        }
+
+        await this._enviarComCooldown(
+          passageiro.id,
+          'arriving',
+          telefone,
+          MessageVariation.rastreamento.vanChegando(passageiro.nome)
+        );
+        continue;
+      }
+
+      if (distancia <= raioNotificacao) {
+        if (registro[statusField] === 'confirmado') {
+          registro[statusField] = 'em_rota';
+          await registro.save();
+        }
+
+        await this._enviarComCooldown(
+          passageiro.id,
+          'nearby',
+          telefone,
+          MessageVariation.rastreamento.vanProxima(passageiro.nome)
+        );
+      }
+    }
+  }
+
+  _resolvePassengerCoords(registro, trecho) {
+    const passageiro = registro?.Passageiro;
+    if (!passageiro) {
+      return null;
+    }
+
+    const endereco = trecho === 'ida' ? passageiro.enderecoIda : passageiro.enderecoVolta;
+    const lat = Number(endereco?.latitude ?? passageiro.latitude);
+    const lng = Number(endereco?.longitude ?? passageiro.longitude);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return null;
+    }
+
+    return { passageiro, lat, lng };
   }
 
   /**

@@ -30,6 +30,16 @@ const getLocationPayload = (message) => {
    return unwrapped?.locationMessage || unwrapped?.liveLocationMessage || null;
 };
 
+const getEnvelopeMessagePayload = (data) => {
+   return unwrapMessage(
+      data?.message ||
+      data?.update?.message ||
+      data?.update?.editedMessage?.message ||
+      data?.update ||
+      null
+   );
+};
+
 class WebhookController {
 
    handleEvolutionAPI = async (req, res) => {
@@ -48,12 +58,24 @@ class WebhookController {
             ? body.data.messages[0]
             : (Array.isArray(body.data) ? body.data[0] : body.data);
          let msgId = firstDataForCache?.key?.id || body.data?.key?.id;
-         const locationForCache = getLocationPayload(firstDataForCache?.message);
+         const locationForCache = getLocationPayload(getEnvelopeMessagePayload(firstDataForCache));
          if (msgId && locationForCache) {
             const lat = locationForCache.degreesLatitude ?? locationForCache.latitude ?? locationForCache.lat;
             const lng = locationForCache.degreesLongitude ?? locationForCache.longitude ?? locationForCache.lng;
-            const timestamp = firstDataForCache?.messageTimestamp || firstDataForCache?.message?.messageTimestamp || '';
+            const timestamp =
+               firstDataForCache?.messageTimestamp ||
+               firstDataForCache?.update?.messageTimestamp ||
+               firstDataForCache?.message?.messageTimestamp ||
+               body.date_time ||
+               '';
             msgId = `${msgId}:${lat ?? 'lat'}:${lng ?? 'lng'}:${timestamp}`;
+         } else if (msgId && (event === 'messages.update' || event === 'MESSAGES_UPDATE')) {
+            const updateSignatureSource = firstDataForCache?.update || firstDataForCache?.status || body.date_time || '';
+            const updateSignature =
+               typeof updateSignatureSource === 'string'
+                  ? updateSignatureSource
+                  : JSON.stringify(updateSignatureSource).slice(0, 240);
+            msgId = `${msgId}:${updateSignature}`;
          }
          if (msgId) {
             if (processedMessages.has(msgId)) {
@@ -123,7 +145,7 @@ class WebhookController {
             const participant = data.key?.participant || remoteJid; // For groups, sender is participant
             const isFromMe = data.key?.fromMe;
             const isGroup = remoteJid?.endsWith('@g.us');
-            const payloadMessage = unwrapMessage(data.message);
+            const payloadMessage = getEnvelopeMessagePayload(data);
             let textMessage = payloadMessage?.conversation || payloadMessage?.extendedTextMessage?.text || '';
 
             if (isFromMe || !remoteJid) continue;
@@ -201,13 +223,13 @@ class WebhookController {
                               // Caso duvidoso pedido pelo cliente: Redireciona pro WhatsApp do Motorista
                               const motorista = await Motorista.findByPk(passageiro.motorista_id);
                               if (motorista) {
-                                 const texto = `âš ï¸ *Alerta Financeiro de ${passageiro.nome}*\nO valor cobrado era R$ ${fin.valor_mensalidade}, mas o PIX parece ter sido de R$ ${analise.value}.\nDetalhe IA: ${analise.details}\n\nVocê autoriza dar baixa nesse comprovante? Refuse ou Ajuste pelo painel!`;
+                                 const texto = `⚠️ *Alerta Financeiro de ${passageiro.nome}*\nO valor cobrado era R$ ${fin.valor_mensalidade}, mas o Pix parece ter sido de R$ ${analise.value}.\nDetalhe da IA: ${analise.details}\n\nVocê autoriza dar baixa nesse comprovante? Recuse ou ajuste pelo painel.`;
                                  EvolutionService.sendMessage(motorista.telefone, texto);
                               }
                               EvolutionService.sendMessage(remoteJid, MessageVariation.financeiro.falha(passageiro.nome));
                            }
                         } else {
-                           EvolutionService.sendMessage(remoteJid, 'ðŸ¤” Você não possui mensalidades pendentes cadastradas no meu sistema atual.');
+                           EvolutionService.sendMessage(remoteJid, '🤔 Você não possui mensalidades pendentes cadastradas no sistema no momento.');
                         }
                      }
                   }
@@ -223,7 +245,7 @@ class WebhookController {
 
             // 1.5 Tratamento de Localização em Tempo Real (GPS Tracking)
             if (msgType === 'locationMessage' || msgType === 'liveLocationMessage') {
-               const locData = getLocationPayload(data.message);
+               const locData = getLocationPayload(payloadMessage);
                const lat = locData?.degreesLatitude ?? locData?.latitude ?? locData?.lat;
                const lng = locData?.degreesLongitude ?? locData?.longitude ?? locData?.lng;
 
@@ -458,7 +480,7 @@ class WebhookController {
 
                      await EvolutionService.sendMessage(remoteJid, LlmService.getDriverOnboardingMessage(m.nome));
                      await EvolutionService.sendMessage(remoteJid, 'Vou te enviar aqui embaixo tambem um breve tutorial com o resumo das minhas funcoes para voce deixar salvo.');
-                     await EvolutionService.sendMessage(remoteJid, LlmService.getDriverTutorialMessage());
+                     await EvolutionService.sendMessage(remoteJid, LlmService.getDriverTutorialMessage(m.nome));
 
                      console.log(`[Vendas] ONBOARDING COMPLETO! Novo motorista: ${m.nome}`);
                      return;
@@ -560,7 +582,7 @@ class WebhookController {
                         await viagem.save();
                         EvolutionService.sendMessage(remoteJid, MessageVariation.rastreamento.pedirLocalizacao());
                      } else {
-                        EvolutionService.sendMessage(remoteJid, `âš ï¸ Não encontrei nenhuma rota gerada pra hoje. As enquetes já fecharam?`);
+                        EvolutionService.sendMessage(remoteJid, `⚠️ Não encontrei nenhuma rota gerada para hoje. As enquetes já fecharam?`);
                      }
                      return;
                   }
@@ -763,7 +785,7 @@ class WebhookController {
 
                   // Pede a mensalidade com piadinha
                   setTimeout(() => {
-                     EvolutionService.sendMessage(remoteJid, `*4. íšltima pergunta!* 💰\nQual o valor da sua mensalidade da van?\n\n(Ex: 250, 180.50)\n\nâš ï¸ _Esse valor será verificado pelo motorista, então nem tenta colocar R$ 1,99 que não cola não, hein! ðŸ˜‚ðŸšŒ_`);
+                     EvolutionService.sendMessage(remoteJid, `*4. Última pergunta!* 💰\nQual o valor da sua mensalidade da van?\n\n(Ex: 250, 180.50)\n\n⚠️ _Esse valor será verificado pelo motorista, então nem tenta colocar R$ 1,99 que não cola não, hein! 😂🚌_`);
                   }, 2000);
                   return;
                }
@@ -773,7 +795,7 @@ class WebhookController {
                   const valor = parseFloat(textoLimpo);
 
                   if (isNaN(valor) || valor <= 0) {
-                     EvolutionService.sendMessage(remoteJid, `ðŸ¤” Não entendi esse valor. Manda só o número, por favor!\nExemplo: *250* ou *180.50*`);
+                     EvolutionService.sendMessage(remoteJid, `🤔 Não entendi esse valor. Manda só o número, por favor!\nExemplo: *250* ou *180.50*`);
                      return;
                   }
 
@@ -781,7 +803,7 @@ class WebhookController {
                   passageiro.onboarding_step = 'CONCLUIDO';
                   await passageiro.save();
 
-                  EvolutionService.sendMessage(remoteJid, `✅ *Cadastro finalizado com sucesso!* ðŸ¥³\n\n📍‹ *Resumo:*\nðŸ‘¤ ${passageiro.nome}\nðŸ•’ Turno: ${passageiro.turno}\n💰 Mensalidade: R$ ${valor.toFixed(2)}\n\nAgora é só ficar de olho na enquete diária no grupo! ðŸšŒ`);
+                  EvolutionService.sendMessage(remoteJid, `✅ *Cadastro finalizado com sucesso!* 🥳\n\n📋 *Resumo:*\n👤 ${passageiro.nome}\n🕒 Turno: ${passageiro.turno}\n💰 Mensalidade: R$ ${valor.toFixed(2)}\n\nAgora é só ficar de olho na enquete diária no grupo! 🚌`);
 
                   // Notificação de Meta para o Motorista Responsável
                   const motorista_resp = await Motorista.findByPk(passageiro.motorista_id);
@@ -796,17 +818,22 @@ class WebhookController {
 
                      let textMeta = '';
                      if (meta > 0) {
-                        if (counts >= meta) textMeta = `(LOTAí‡íƒO COMPLETA! ðŸ¥³ A van encheu!)`;
+                        if (counts >= meta) textMeta = `(LOTAÇÃO COMPLETA! 🥳 A van encheu!)`;
                         else textMeta = `(Faltam ${meta - counts} alunos para fechar a lista desse turno!)`;
                      }
 
-                     const notifyText = `ðŸ”” *Novo Aluno a Bordo!*\n\nO(A) responsável/aluno *${passageiro.nome}* concluiu o auto-cadastro para o turno *${passageiro.turno}*.\nMensalidade informada: *R$ ${valor.toFixed(2)}*\n\n📊 *Resumo do Turno:* Você tem ${counts} confirmados.\n${textMeta}`;
+                     const notifyText = `🔔 *Novo Aluno a Bordo!*\n\nO(A) responsável/aluno *${passageiro.nome}* concluiu o auto-cadastro para o turno *${passageiro.turno}*.\nMensalidade informada: *R$ ${valor.toFixed(2)}*\n\n📊 *Resumo do Turno:* Você tem ${counts} confirmados.\n${textMeta}`;
                      EvolutionService.sendMessage(motorista_resp.telefone, notifyText);
                   }
 
                   return;
                }
             } else if (passageiro && passageiro.onboarding_step === 'CONCLUIDO') {
+               const rideConfirmationHandled = await this._handlePrivateRideConfirmation(passageiro, remoteJid, textMessage);
+               if (rideConfirmationHandled) {
+                  return;
+               }
+
                // 3.5 Cancelamento de Trecho via LLM (passageiro desiste da ida ou volta)
                const LlmServiceCancel = require('../services/LlmService');
                const cancelDetect = await LlmServiceCancel.parseRideCancellation(textMessage);
@@ -834,12 +861,12 @@ class WebhookController {
 
                      let trechoMsg = cancelarIda && cancelarVolta ? 'ida e volta' : cancelarIda ? 'ida' : 'volta';
                      EvolutionService.sendMessage(remoteJid,
-                        `✅ Anotado, *${passageiro.nome}*! Tirei você da lista de *${trechoMsg}* de hoje. Se mudar de ideia, é só votar de novo na enquete! ðŸšŒ`
+                        `✅ Anotado, *${passageiro.nome}*! Tirei você da lista de *${trechoMsg}* de hoje. Se mudar de ideia, é só votar de novo na enquete! 🚌`
                      );
                      return;
                   } else {
                      EvolutionService.sendMessage(remoteJid,
-                        `ðŸ¤” *${passageiro.nome}*, não encontrei nenhuma viagem sua cadastrada pra hoje. Será que a enquete ainda não abriu?`
+                        `🤔 *${passageiro.nome}*, não encontrei nenhuma viagem sua cadastrada para hoje. Será que a enquete ainda não abriu?`
                      );
                      return;
                   }
@@ -1141,6 +1168,387 @@ class WebhookController {
       if (horaAtual >= 10 && horaAtual < 16) return 'tarde';
       if (horaAtual >= 16) return 'noite';
       return 'manha';
+   }
+
+   async _handlePrivateRideConfirmation(passageiro, remoteJid, textMessage) {
+      const selection = this._extractPrivateRideConfirmation(textMessage);
+      if (!selection) {
+         return false;
+      }
+
+      if (!passageiro.motorista_id) {
+         await EvolutionService.sendMessage(
+            remoteJid,
+            `⚠️ ${passageiro.nome}, nao consegui localizar o motorista responsavel pelo seu cadastro. Fale direto com a van para combinar hoje.`
+         );
+         return true;
+      }
+
+      const { Op } = require('sequelize');
+      const Viagem = require('../models/Viagem');
+      const ViagemPassageiro = require('../models/ViagemPassageiro');
+      const hojeStr = new Date().toISOString().split('T')[0];
+      const turnoAlvo = this._resolveTurnoPassageiroPrivado(passageiro);
+
+      let viagem = await Viagem.findOne({
+         where: {
+            data: hojeStr,
+            motorista_id: passageiro.motorista_id,
+            turno: turnoAlvo,
+            status: { [Op.ne]: 'finalizada' }
+         },
+         order: [['updatedAt', 'DESC'], ['id', 'DESC']]
+      });
+
+      if (!viagem) {
+         viagem = await Viagem.findOne({
+            where: {
+               data: hojeStr,
+               motorista_id: passageiro.motorista_id,
+               status: { [Op.ne]: 'finalizada' }
+            },
+            order: [['updatedAt', 'DESC'], ['id', 'DESC']]
+         });
+      }
+
+      const viagemJaExistia = Boolean(viagem);
+      if (!viagem) {
+         viagem = await Viagem.create({
+            data: hojeStr,
+            turno: turnoAlvo,
+            motorista_id: passageiro.motorista_id,
+            status: 'pendente'
+         });
+      }
+
+      const [vp, criado] = await ViagemPassageiro.findOrCreate({
+         where: { viagem_id: viagem.id, passageiro_id: passageiro.id },
+         defaults: {
+            viagem_id: viagem.id,
+            passageiro_id: passageiro.id,
+            status_ida: selection.statusIda,
+            status_volta: selection.statusVolta
+         }
+      });
+
+      const jaEstavaRegistrado =
+         !criado &&
+         vp.status_ida === selection.statusIda &&
+         vp.status_volta === selection.statusVolta;
+
+      if (!criado && !jaEstavaRegistrado) {
+         vp.status_ida = selection.statusIda;
+         vp.status_volta = selection.statusVolta;
+         await vp.save();
+      }
+
+      const trechoLabel = this._formatTrechoLabel(selection.trecho);
+      const precisaAvisarMotorista = !viagemJaExistia || viagem.status === 'rota_gerada' || viagem.status === 'em_andamento';
+
+      if (jaEstavaRegistrado) {
+         await EvolutionService.sendMessage(
+            remoteJid,
+            `✅ ${passageiro.nome}, sua presenca de *${trechoLabel}* para hoje ja estava registrada aqui.`
+         );
+         return true;
+      }
+
+      if (precisaAvisarMotorista) {
+         const motorista = await Motorista.findByPk(passageiro.motorista_id);
+         if (motorista?.telefone) {
+            const motivo = !viagemJaExistia
+               ? 'Nao havia uma viagem aberta para esse turno.'
+               : 'A lista do turno ja tinha sido fechada.';
+
+            await EvolutionService.sendMessage(
+               motorista.telefone,
+               `⚠️ *Confirmacao no privado*\n\n${passageiro.nome} confirmou *${trechoLabel}* pelo privado para hoje.\nTurno: *${String(viagem.turno || turnoAlvo).toUpperCase()}*.\n\n${motivo}\nRevise a rota manualmente no painel.`
+            );
+
+            await this._recalculateAndSendUpdatedRoutesToDriver(motorista, viagem, passageiro, selection);
+         }
+
+         await EvolutionService.sendMessage(
+            remoteJid,
+            `✅ Anotado, *${passageiro.nome}*! Atualizei sua presenca de *${trechoLabel}* para hoje, recalculei a rota e enviei a ordem nova para o motorista.`
+         );
+      } else {
+         await EvolutionService.sendMessage(
+            remoteJid,
+            `✅ Anotado, *${passageiro.nome}*! Registrei sua presenca de *${trechoLabel}* para hoje.`
+         );
+      }
+
+      console.log(`[Webhook] Confirmacao privada registrada: ${passageiro.nome} -> ida=${selection.statusIda}, volta=${selection.statusVolta} (Viagem #${viagem.id})`);
+      return true;
+   }
+
+   async _recalculateAndSendUpdatedRoutesToDriver(motorista, viagem, passageiroNovo, selection) {
+      const trechos = [];
+      if (selection.statusIda === 'confirmado') trechos.push('ida');
+      if (selection.statusVolta === 'confirmado') trechos.push('volta');
+
+      for (const trecho of trechos) {
+         const persistOrder = this._shouldPersistRecalculatedOrder(viagem, selection, trecho);
+         const resultado = await this._recalculateTripRouteForTrecho(motorista, viagem, trecho, passageiroNovo, selection.trecho, persistOrder);
+         if (!resultado?.mensagem) continue;
+         await EvolutionService.sendMessage(motorista.telefone, resultado.mensagem);
+      }
+   }
+
+   async _recalculateTripRouteForTrecho(motorista, viagem, trecho, passageiroNovo, trechoConfirmado, persistOrder) {
+      const { ViagemPassageiro, Passageiro, Endereco } = require('../models');
+      const RoutingService = require('../services/RoutingService');
+      const registros = await ViagemPassageiro.findAll({
+         where: { viagem_id: viagem.id },
+         include: [{
+            model: Passageiro,
+            include: [
+               { model: Endereco, as: 'enderecoIda' },
+               { model: Endereco, as: 'enderecoVolta' }
+            ]
+         }],
+         order: [['ordem_rota', 'ASC'], ['id', 'ASC']]
+      });
+
+      const statusField = trecho === 'ida' ? 'status_ida' : 'status_volta';
+      const candidatos = registros
+         .filter(registro => this._isRerouteCandidate(registro[statusField]) && registro.Passageiro)
+         .map(registro => {
+            const passageiro = registro.Passageiro;
+            const endereco = trecho === 'ida' ? passageiro.enderecoIda : passageiro.enderecoVolta;
+            return {
+               registro,
+               passageiro,
+               latitude: endereco?.latitude ?? passageiro.latitude,
+               longitude: endereco?.longitude ?? passageiro.longitude,
+               enderecoFormatado: endereco?.endereco_completo || passageiro.logradouro || passageiro.bairro || 'Endereço não informado'
+            };
+         });
+
+      if (candidatos.length === 0) {
+         return null;
+      }
+
+      const comCoordenadas = candidatos.filter(c => Number.isFinite(Number(c.latitude)) && Number.isFinite(Number(c.longitude)));
+      const semCoordenadas = candidatos.filter(c => !Number.isFinite(Number(c.latitude)) || !Number.isFinite(Number(c.longitude)));
+      const origem = this._resolveRecalculationStartCoords(motorista, viagem, trecho, registros);
+
+      let ordenados = [];
+      if (comCoordenadas.length > 0) {
+         const resultado = RoutingService.calculateOptimalRoute(
+            comCoordenadas.map(c => ({
+               latitude: Number(c.latitude),
+               longitude: Number(c.longitude),
+               nome: c.passageiro.nome,
+               enderecoFormatado: c.enderecoFormatado,
+               registroId: c.registro.id
+            })),
+            origem
+         );
+
+         const porRegistroId = new Map(comCoordenadas.map(c => [c.registro.id, c]));
+         ordenados = resultado.orderedPath
+            .map(item => porRegistroId.get(item.registroId))
+            .filter(Boolean);
+      }
+
+      const registrosOrdenados = [...ordenados, ...semCoordenadas];
+
+      if (persistOrder) {
+         for (let i = 0; i < registrosOrdenados.length; i++) {
+            const registro = registrosOrdenados[i].registro;
+            registro.ordem_rota = i + 1;
+            await registro.save();
+         }
+      }
+
+      return {
+         mensagem: this._buildRecalculatedRouteMessage(viagem, trecho, registrosOrdenados, passageiroNovo, trechoConfirmado, semCoordenadas.length > 0)
+      };
+   }
+
+   _buildRecalculatedRouteMessage(viagem, trecho, registrosOrdenados, passageiroNovo, trechoConfirmado, temSemCoordenadas) {
+      if (registrosOrdenados.length === 0) {
+         return null;
+      }
+
+      const turno = String(viagem.turno || '').toUpperCase() || 'TURNO';
+      const tituloTrecho = trecho === 'ida' ? 'IDA' : 'VOLTA';
+      const origem = trecho === 'ida' ? '1. 🏠 Base' : '1. 🏫 Escola';
+      const destino = trecho === 'ida' ? '🏫 Destino final: escola' : '🏠 Retorno: base';
+      const lista = registrosOrdenados
+         .map((item, index) => {
+            const passageiro = item.passageiro;
+            const marcadorNovo = passageiro.id === passageiroNovo.id ? ' 🆕' : '';
+            const marcadorGeo = (!Number.isFinite(Number(item.latitude)) || !Number.isFinite(Number(item.longitude))) ? ' (sem geocode)' : '';
+            return `${index + 2}. ${passageiro.nome}${marcadorNovo} - 📍${item.enderecoFormatado}${marcadorGeo}`;
+         })
+         .join('\n');
+
+      const observacaoGeo = temSemCoordenadas
+         ? `\n\n⚠️ Alguns pontos ficaram sem geocode e foram mantidos no fim da lista.`
+         : '';
+
+      return `🔄 *ROTA RECALCULADA - ${tituloTrecho} ${turno}*\nAjuste no privado: *${passageiroNovo.nome}* confirmou *${this._formatTrechoLabel(trechoConfirmado)}*.\n\n👥 ${registrosOrdenados.length} passageiro(s) nesse trecho\n\n${origem}\n${lista}\n${destino}${observacaoGeo}`;
+   }
+
+   _resolveRecalculationStartCoords(motorista, viagem, trecho, registros) {
+      const fallbackBase = {
+         lat: Number(motorista?.latitude) || -23.55052,
+         lng: Number(motorista?.longitude) || -46.633308
+      };
+
+      if (viagem.status === 'em_andamento' && viagem.trecho_ativo === trecho) {
+         const statusField = trecho === 'ida' ? 'status_ida' : 'status_volta';
+         const recolhidos = registros
+            .filter(registro => registro[statusField] === 'recolhido' && registro.Passageiro)
+            .sort((a, b) => (b.ordem_rota || 0) - (a.ordem_rota || 0));
+
+         for (const registro of recolhidos) {
+            const passageiro = registro.Passageiro;
+            const endereco = trecho === 'ida' ? passageiro.enderecoIda : passageiro.enderecoVolta;
+            const lat = Number(endereco?.latitude ?? passageiro.latitude);
+            const lng = Number(endereco?.longitude ?? passageiro.longitude);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+               return { lat, lng };
+            }
+         }
+      }
+
+      if (trecho === 'volta') {
+         const escolaLat = Number(motorista?.escola_latitude);
+         const escolaLng = Number(motorista?.escola_longitude);
+         if (Number.isFinite(escolaLat) && Number.isFinite(escolaLng)) {
+            return { lat: escolaLat, lng: escolaLng };
+         }
+      }
+
+      return fallbackBase;
+   }
+
+   _shouldPersistRecalculatedOrder(viagem, selection, trecho) {
+      if (selection.trecho === trecho) return true;
+      if (selection.trecho !== 'ambos') return false;
+      if (viagem.trecho_ativo) return viagem.trecho_ativo === trecho;
+      return trecho === 'ida';
+   }
+
+   _isRerouteCandidate(status) {
+      return status === 'confirmado' || status === 'em_rota';
+   }
+
+   _extractPrivateRideConfirmation(textMessage) {
+      const text = this._normalizeComparableText(textMessage);
+      if (!text) return null;
+
+      const futureMarkers = ['amanha', 'depois de amanha', 'semana que vem', 'mes que vem'];
+      if (futureMarkers.some(marker => text.includes(marker))) {
+         return null;
+      }
+
+      const negativeMarkers = [
+         'nao vou',
+         'nao irei',
+         'nao volto',
+         'nao vou voltar',
+         'nao vou ir',
+         'cancela ida',
+         'cancela volta',
+         'cancela tudo',
+         'sem ida',
+         'sem volta'
+      ];
+      if (negativeMarkers.some(marker => text.includes(marker))) {
+         return null;
+      }
+
+      const explicitBothMarkers = [
+         'ida e volta',
+         'vou e volto',
+         'ambos trechos',
+         'os dois trechos'
+      ];
+      const explicitBoth = explicitBothMarkers.some(marker => text.includes(marker));
+      const explicitIda = /(?:^|\s)(so|apenas|somente) ida(?:\s|$)/.test(text);
+      const explicitVolta = /(?:^|\s)(so|apenas|somente) volta(?:\s|$)/.test(text);
+
+      const mentionsIda =
+         explicitIda ||
+         /\bida\b/.test(text);
+
+      const mentionsVolta =
+         explicitVolta ||
+         /\bvolta\b/.test(text) ||
+         text.includes('volto');
+
+      const affirmativeMarkers = [
+         'vou',
+         'irei',
+         'confirmo',
+         'confirmo presenca',
+         'presenca confirmada',
+         'me coloca',
+         'me adiciona',
+         'me adicione',
+         'me inclui',
+         'me inclua',
+         'pode me colocar',
+         'pode me adicionar',
+         'conta comigo',
+         'vou usar a van',
+         'preciso da van'
+      ];
+      const affirmative = affirmativeMarkers.some(marker => text.includes(marker));
+
+      if (!affirmative && !explicitBoth && !explicitIda && !explicitVolta) {
+         return null;
+      }
+
+      if (explicitBoth || (mentionsIda && mentionsVolta) || (!mentionsIda && !mentionsVolta)) {
+         return { trecho: 'ambos', statusIda: 'confirmado', statusVolta: 'confirmado' };
+      }
+
+      if (mentionsIda) {
+         return { trecho: 'ida', statusIda: 'confirmado', statusVolta: 'ausente' };
+      }
+
+      if (mentionsVolta) {
+         return { trecho: 'volta', statusIda: 'ausente', statusVolta: 'confirmado' };
+      }
+
+      return null;
+   }
+
+   _resolveTurnoPassageiroPrivado(passageiro) {
+      const turnoAtual = this._resolveTurnoVoto();
+      const turnoPassageiro = this._normalizeComparableText(passageiro?.turno || '');
+
+      if (!turnoPassageiro) {
+         return turnoAtual;
+      }
+
+      if (turnoPassageiro.includes('tarde')) return 'tarde';
+      if (turnoPassageiro.includes('noite')) return 'noite';
+      if (turnoPassageiro.includes('manha')) return 'manha';
+
+      return turnoAtual;
+   }
+
+   _formatTrechoLabel(trecho) {
+      if (trecho === 'ida') return 'ida';
+      if (trecho === 'volta') return 'volta';
+      return 'ida e volta';
+   }
+
+   _normalizeComparableText(value) {
+      return String(value || '')
+         .toLowerCase()
+         .normalize('NFD')
+         .replace(/[\u0300-\u036f]/g, '')
+         .replace(/[^\w\s]+/g, ' ')
+         .replace(/\s+/g, ' ')
+         .trim();
    }
 
    _mapPollOptionToStatuses(selectedOption) {
