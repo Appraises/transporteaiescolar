@@ -564,29 +564,6 @@ class WebhookController {
                      return;
                   }
 
-                  // A3. Comando Iniciar Rota (Ativa rastreamento GPS)
-                  const iniciarMatch = textMessage.toLowerCase().trim().match(/^iniciar\s+(rota|ida|volta)$/);
-                  if (iniciarMatch) {
-                     const Viagem = require('../models/Viagem');
-                     const hojeStr = new Date().toISOString().split('T')[0];
-                     const trechoSolicitado = iniciarMatch[1] === 'rota' ? 'ida' : iniciarMatch[1];
-
-                     const viagem = await Viagem.findOne({
-                        where: { motorista_id: m.id, data: hojeStr, status: 'rota_gerada' }
-                     });
-
-                     if (viagem) {
-                        viagem.status = 'em_andamento';
-                        viagem.trecho_ativo = trechoSolicitado;
-                        viagem.parada_atual = 1;
-                        await viagem.save();
-                        EvolutionService.sendMessage(remoteJid, MessageVariation.rastreamento.pedirLocalizacao());
-                     } else {
-                        EvolutionService.sendMessage(remoteJid, `⚠️ Não encontrei nenhuma rota gerada para hoje. As enquetes já fecharam?`);
-                     }
-                     return;
-                  }
-
                   // B. Pausas Operacionais (Férias e Feriados via LLM)
                   const LlmService = require('../services/LlmService');
                   const hojeFormatado = new Date().toISOString().split('T')[0];
@@ -907,8 +884,9 @@ class WebhookController {
             WebhookQueueService.enqueue(remoteJid, data);
          }
 
-         // Captura de Votos da Enquete
-         if (event === 'messages.update' || event === 'MESSAGES_UPDATE') {
+         // Captura de votos da enquete em payloads de messages.update.
+         // Outros updates (como live location) precisam seguir para o funil normal.
+         if ((event === 'messages.update' || event === 'MESSAGES_UPDATE') && this._containsPollVotePayload(body.data)) {
             await this._handlePollUpdate(body.data);
             return;
 
@@ -1044,9 +1022,9 @@ class WebhookController {
          for (const updateInfo of updates) {
             if (!updateInfo) continue;
 
-            const selectedOption = this._extractSelectedPollOption(updateInfo);
-            if (!selectedOption) {
-               console.log('[Webhook] PollUpdate sem opcao selecionada. Ignorando...');
+            const voteState = this._extractPollVoteState(updateInfo);
+            if (!voteState.hasVote) {
+               console.log('[Webhook] PollUpdate sem payload de voto acionavel. Ignorando...');
                continue;
             }
 
@@ -1057,8 +1035,6 @@ class WebhookController {
                console.log(`[Webhook] PollUpdate sem grupo ou votante. group=${groupJid || 'N/A'} voter=${voterJid || 'N/A'}`);
                continue;
             }
-
-            console.log(`[Webhook] Recebeu voto de enquete: ${selectedOption} | voter=${voterJid} | group=${groupJid}`);
 
             const passageiroVotante = await Passageiro.findOne({
                where: { telefone_responsavel: voterJid, onboarding_step: 'CONCLUIDO' }
@@ -1094,21 +1070,58 @@ class WebhookController {
                }
             });
 
+            const registroExistente = await ViagemPassageiro.findOne({
+               where: { viagem_id: viagem.id, passageiro_id: passageiroVotante.id }
+            });
+
+            if (!voteState.hasSelection) {
+               if (!registroExistente) {
+                  console.log(`[Webhook] Deselecao de enquete sem voto previo para ${passageiroVotante.nome}. Ignorando.`);
+                  continue;
+               }
+
+               const clearedStatuses = this._clearPollVoteStatuses(registroExistente);
+               const houveMudanca =
+                  registroExistente.status_ida !== clearedStatuses.statusIda ||
+                  registroExistente.status_volta !== clearedStatuses.statusVolta ||
+                  (clearedStatuses.clearRouteOrder && registroExistente.ordem_rota !== null);
+
+               if (!houveMudanca) {
+                  console.log(`[Webhook] Deselecao de enquete sem alteracao efetiva para ${passageiroVotante.nome}.`);
+                  continue;
+               }
+
+               registroExistente.status_ida = clearedStatuses.statusIda;
+               registroExistente.status_volta = clearedStatuses.statusVolta;
+               if (clearedStatuses.clearRouteOrder) {
+                  registroExistente.ordem_rota = null;
+               }
+               await registroExistente.save();
+
+               console.log(`[Webhook] Voto removido: ${passageiroVotante.nome} -> ida=${clearedStatuses.statusIda}, volta=${clearedStatuses.statusVolta} (Viagem #${viagem.id})`);
+               continue;
+            }
+
+            const selectedOption = voteState.selectedOption;
+            if (!selectedOption) {
+               console.log('[Webhook] PollUpdate com selecao invalida. Ignorando...');
+               continue;
+            }
+            console.log(`[Webhook] Recebeu voto de enquete: ${selectedOption} | voter=${voterJid} | group=${groupJid}`);
+
             const { statusIda, statusVolta } = this._mapPollOptionToStatuses(selectedOption);
-            const [vp, criado] = await ViagemPassageiro.findOrCreate({
-               where: { viagem_id: viagem.id, passageiro_id: passageiroVotante.id },
-               defaults: {
+
+            if (!registroExistente) {
+               await ViagemPassageiro.create({
                   viagem_id: viagem.id,
                   passageiro_id: passageiroVotante.id,
                   status_ida: statusIda,
                   status_volta: statusVolta
-               }
-            });
-
-            if (!criado) {
-               vp.status_ida = statusIda;
-               vp.status_volta = statusVolta;
-               await vp.save();
+               });
+            } else {
+               registroExistente.status_ida = statusIda;
+               registroExistente.status_volta = statusVolta;
+               await registroExistente.save();
             }
 
             console.log(`[Webhook] Voto registrado: ${passageiroVotante.nome} -> ida=${statusIda}, volta=${statusVolta} (Viagem #${viagem.id})`);
@@ -1118,23 +1131,58 @@ class WebhookController {
       }
    }
 
-   _extractSelectedPollOption(updateInfo) {
-      const directVote = updateInfo.message?.pollUpdateMessage?.vote;
-      if (directVote?.selectedOptions?.length > 0) {
-         return this._formatPollOption(directVote.selectedOptions[0]);
+   _extractPollVoteState(updateInfo) {
+      const directState = this._extractPollVoteStateFromVote(updateInfo.message?.pollUpdateMessage?.vote);
+      if (directState) {
+         return directState;
       }
 
       const pollUpdates = updateInfo.update?.pollUpdates;
       if (Array.isArray(pollUpdates)) {
          for (const pollUpdate of pollUpdates) {
-            const selectedOptions = pollUpdate?.vote?.selectedOptions;
-            if (selectedOptions?.length > 0) {
-               return this._formatPollOption(selectedOptions[0]);
+            const state = this._extractPollVoteStateFromVote(pollUpdate?.vote);
+            if (state) {
+               return state;
             }
          }
       }
 
-      return null;
+      return { hasVote: false, hasSelection: false, selectedOption: null };
+   }
+
+   _containsPollVotePayload(payload) {
+      const updates = Array.isArray(payload) ? payload : [payload];
+
+      return updates.some(updateInfo => {
+         if (!updateInfo || typeof updateInfo !== 'object') {
+            return false;
+         }
+
+         if (this._extractPollVoteStateFromVote(updateInfo.message?.pollUpdateMessage?.vote)) {
+            return true;
+         }
+
+         const pollUpdates = updateInfo.update?.pollUpdates;
+         return Array.isArray(pollUpdates) && pollUpdates.some(pollUpdate =>
+            Boolean(this._extractPollVoteStateFromVote(pollUpdate?.vote))
+         );
+      });
+   }
+
+   _extractPollVoteStateFromVote(vote) {
+      if (!vote || !Array.isArray(vote.selectedOptions)) {
+         return null;
+      }
+
+      if (vote.selectedOptions.length === 0) {
+         return { hasVote: true, hasSelection: false, selectedOption: null };
+      }
+
+      return {
+         hasVote: true,
+         hasSelection: true,
+         selectedOption: this._formatPollOption(vote.selectedOptions[0])
+      };
    }
 
    _formatPollOption(option) {
@@ -1549,6 +1597,29 @@ class WebhookController {
          .replace(/[^\w\s]+/g, ' ')
          .replace(/\s+/g, ' ')
          .trim();
+   }
+
+   _clearPollVoteStatuses(registro) {
+      const nextStatusIda = this._isPollDrivenStatus(registro?.status_ida) ? 'aguardando_resposta' : registro?.status_ida;
+      const nextStatusVolta = this._isPollDrivenStatus(registro?.status_volta) ? 'aguardando_resposta' : registro?.status_volta;
+      const clearRouteOrder = !this._isRouteActiveStatus(nextStatusIda) && !this._isRouteActiveStatus(nextStatusVolta);
+
+      return {
+         statusIda: nextStatusIda,
+         statusVolta: nextStatusVolta,
+         clearRouteOrder
+      };
+   }
+
+   _isPollDrivenStatus(status) {
+      return status === 'aguardando_resposta' ||
+         status === 'confirmado' ||
+         status === 'ausente' ||
+         status === 'em_rota';
+   }
+
+   _isRouteActiveStatus(status) {
+      return status === 'confirmado' || status === 'em_rota' || status === 'recolhido' || status === 'entregue';
    }
 
    _mapPollOptionToStatuses(selectedOption) {

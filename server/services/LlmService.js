@@ -515,10 +515,9 @@ Guarde essas dicas aqui no meu contato. Muito sucesso pra nós! 😉`;
 - *lotacao tarde 12*
 - *lotacao noite 8*
 - *raio 1.5* -> altera o raio de aviso em km
-- *iniciar ida* ou *iniciar volta* -> ativa o rastreamento da rota
 
 *2. Rastreamento ao vivo*
-Quando você mandar *iniciar ida* ou *iniciar volta*, eu vou pedir sua localização em tempo real no WhatsApp. Com isso, comparo sua posição com os passageiros da rota e disparo os avisos de chegada automaticamente.
+Quando a rota do turno já estiver pronta, basta compartilhar sua localização em tempo real no WhatsApp. A primeira localização recebida já inicia o acompanhamento automaticamente, sem precisar mandar comando de texto.
 
 *3. Enquetes e confirmações*
 Eu envio as enquetes diárias no grupo, fecho a contagem e monto a rota. Se algum passageiro confirmar depois no meu privado, eu atualizo a rota e te mando a ordem recalculada.
