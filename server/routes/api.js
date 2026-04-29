@@ -31,6 +31,10 @@ router.post('/config', motoristaAuth, ConfigController.salvar);
 router.post('/motoristas/pagamento', MotoristaController.webhookPagamento);
 
 router.post('/viagens/calcular-rota', motoristaAuth, ViagemController.calcularRotaOtima);
+router.get('/viagens/ativa', motoristaAuth, ViagemController.getViagemAtiva);
+router.post('/viagens/ativa/avancar', motoristaAuth, ViagemController.avancarParada);
+router.post('/viagens/ativa/sync-localizacao', motoristaAuth, ViagemController.syncLocalizacao);
+router.post('/viagens/ativa/finalizar', motoristaAuth, ViagemController.finalizarViagem);
 
 // ========== ROTAS ADMIN MASTER DASHBOARD ==========
 router.post('/admin/login', AdminController.login);

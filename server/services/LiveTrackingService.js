@@ -52,9 +52,10 @@ class LiveTrackingService {
 
       // 2. Busca viagem ativa do motorista. Se a rota ja foi gerada, a primeira
       // localizacao do motorista inicia automaticamente o rastreamento.
+      const { Op } = require('sequelize');
       const hojeStr = new Date().toISOString().split('T')[0];
       let viagem = await Viagem.findOne({
-        where: { motorista_id: motorista.id, data: hojeStr, status: 'em_andamento' },
+        where: { motorista_id: motorista.id, data: hojeStr, status: { [Op.in]: ['em_andamento', 'indo_para_escola'] } },
         order: [['updatedAt', 'DESC']]
       });
 
@@ -139,37 +140,11 @@ class LiveTrackingService {
 
       // 5. Lógica de proximidade SEQUENCIAL
 
-      // 5a. Chegou no passageiro atual (≤ 400m) → marca como recolhido
-      if (distanciaAtual <= RAIO_COLETA) {
-        paradaAtual[statusField] = 'recolhido';
-        await paradaAtual.save();
-        console.log(`[GPS] ✅ ${passAtual.nome} marcado como RECOLHIDO`);
-
-        // Limpa cooldown desse passageiro
-        notificationCooldowns.delete(passAtual.id);
-
-        // Avança parada_atual
-        viagem.parada_atual = (viagem.parada_atual || 1) + 1;
-        await viagem.save();
-
-        // Notifica o PRÓXIMO da fila (se existir)
-        const proximoRegistro = passageirosOrdenados[1]; // próximo após o atual
-        if (proximoRegistro) {
-          const proxPass = proximoRegistro.Passageiro;
-          const telefoneProx = proxPass.telefone_responsavel || proxPass.telefone;
-          if (telefoneProx) {
-            await this._enviarComCooldown(proxPass.id, 'arriving', telefoneProx,
-              MessageVariation.rastreamento.vanChegando(proxPass.nome)
-            );
-          }
-        } else {
-          // Era o último! Finaliza trecho
-          await this._finalizarTrecho(viagem, trecho, registros.filter(r => r[statusField] === 'recolhido').length + 1, motorista);
-        }
-        return;
-      }
-
-      // 5b. Dentro do raio de notificação → avisa "fique pronto"
+      // Como o Frontend agora faz o avanço automático aos 50 metros,
+      // deixamos o avanço para o RotaAtiva.jsx (POST /api/viagens/ativa/avancar).
+      // Aqui tratamos APENAS a notificação do raio de aproximação.
+      
+      // Dentro do raio de notificação -> avisa "fique pronto"
       if (distanciaAtual <= raioNotificacao) {
         const telefoneAtual = passAtual.telefone_responsavel || passAtual.telefone;
         if (telefoneAtual) {
@@ -188,7 +163,6 @@ class LiveTrackingService {
       // 6. Proximidade da Escola/Faculdade (apenas no trecho IDA)
       if (trecho === 'ida' && motorista.escola_latitude && motorista.escola_longitude) {
         const distanciaEscola = haversineMeters(currentLat, currentLng, motorista.escola_latitude, motorista.escola_longitude);
-        
         if (distanciaEscola <= raioNotificacao) {
           const { GrupoMotorista } = require('../models');
           const grupos = await GrupoMotorista.findAll({ where: { motorista_id: motorista.id } });
